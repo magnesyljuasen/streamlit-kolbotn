@@ -8,7 +8,7 @@ from streamlit_extras.no_default_selectbox import selectbox
 from streamlit_extras.add_vertical_space import add_vertical_space
 
 def streamlit_settings():
-    st.set_page_config(page_title="TRT", layout="centered", page_icon="src/data/img/AsplanViak_Favicon_32x32.png", initial_sidebar_state="collapsed")
+    st.set_page_config(page_title="Kolbotn", layout="centered", page_icon="src/data/img/AsplanViak_Favicon_32x32.png", initial_sidebar_state="collapsed")
     with open("src/styles/main.css") as f:
         st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
         st.markdown("""<style>[data-testid="collapsedControl"] {display: none}</style>""", unsafe_allow_html=True) # ingen sidebar
