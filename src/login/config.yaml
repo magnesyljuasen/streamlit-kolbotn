@@ -1,11 +1,11 @@
 credentials:
   usernames:
-    baasum:
-      name: Baasum Boring
-      password: $2b$12$ahhcTyDYK2AX6Dpcj9UV5.u2KBdafdFrUsYqN.R2ah0He1gOdPTr6 # To be replaced with hashed password
-    seabrokers:
-      name: Seabrokers GeoEnergi
-      password: $2b$12$p1LFqRNMpCcSFmLwyeLGr.tApBZs0iHE6cPHf6gCPYjaafTRh5Gh. # To be replaced with hashed password
+    kolbotn:
+      name: Kolbotn IL
+      password: $2b$12$z/og1JnlDd/bqwF.PA5/x.6RXFU0yhUCE4mkjVxjPukQqNAEPEuy. # To be replaced with hashed password
+    asplanviak:
+      name: Asplan Viak
+      password: $2b$12$zwddFY4mU4gtv6sGXv/pjeqzdoUGdQoRV2L/614JOs7jylpq1h8Qe # To be replaced with hashed password
 cookie:
   expiry_days: 60
   key: some_signature_key

@@ -14,19 +14,12 @@ def frontpage(name, authentication_status, username, authenticator):
         st.error('Ugyldig brukernavn/passord')
     # ingen input
     elif authentication_status == None:
-        st.image(Image.open('src/data/img/av_logo.png'), caption = "TRT")
+        st.image(Image.open('src/data/img/av_logo.png'), caption = "Kolbotn")
     # app start
     elif authentication_status:
         #-- 
-        if st.button("Registrer ny termisk responstest"):
-            switch_page("Ny_test_1")
-        if st.button("Fortsett registrering av eksisterende termisk responstest"):
-            switch_page("Eksisterende_test_1")
-        if st.button("Se historiske tester"):
-            switch_page("Historiske_tester")
-        #if st.button("Leie testrigg?"):
-        #    switch_page("Historiske_tester")
-        #--
+        if st.button("Se data"):
+            switch_page("Se_data")
         st.image(Image.open('src/data/img/AsplanViak_illustrasjoner-01.png'))
         c1, c2 = st.columns(2)
         with c1:
