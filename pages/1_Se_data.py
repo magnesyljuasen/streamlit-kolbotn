@@ -15,15 +15,13 @@ from src.scripts import streamlit_settings, switch_pages
 streamlit_settings()
 
 st.title('Driftsdata for sesongvarmelager')
+st.info("Anlegget fungerer")
 
 filnavn = 'Trd_2023-06-27.csv'
 filnavn2 = 'Trd_2023-06-27 (1).csv'
 
 def custom_to_datetime(timestamp):
     return pd.to_datetime(timestamp, format="%d.%m.%Y %H:%M:%S")
-
-
-
 
 df = pd.read_csv(filnavn, 
         sep=";", 
