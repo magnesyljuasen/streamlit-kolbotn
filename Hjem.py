@@ -17,10 +17,15 @@ def frontpage(name, authentication_status, username, authenticator):
         st.image(Image.open('src/data/img/av_logo.png'), caption = "Kolbotn")
     # app start
     elif authentication_status:
-        #-- 
-        if st.button("Se data"):
-            switch_page("Se_data")
-        st.image(Image.open('src/data/img/AsplanViak_illustrasjoner-01.png'))
+        #--
+        c1, c2 = st.columns(2)
+        with c1: 
+            if st.button("Temperatur"):
+                switch_page("temperaturer")
+        with c2:
+            if st.button("Se data"):
+                switch_page("se_data")
+        st.image(Image.open('src/data/img/illustrasjon.png'))
         c1, c2 = st.columns(2)
         with c1:
             authenticator.logout('Logg ut')
