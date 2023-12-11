@@ -54,6 +54,9 @@ def get_names(df, substring):
     df.columns = column_names
     return df
 
+def convert_to_float(value):
+    return float(str(value).replace(',', '.'))
+
 def get_full_dataframe():
     #client = pymongo.MongoClient(**st.secrets["mongo"])
     client = pymongo.MongoClient("mongodb+srv://magnesyljuasen:jau0IMk5OKJWJ3Xl@cluster0.dlyj4y2.mongodb.net/")
@@ -78,9 +81,17 @@ def get_full_dataframe():
     merged_df = pd.merge(df1, df2, on='ID')
     merged_df = pd.merge(merged_df, df3, on='ID')
     merged_df = merged_df.T.drop_duplicates().T
-    merged_df['Tid'] = pd.to_datetime(merged_df['Date_x'] + ' ' + merged_df['Time_x'])
+    merged_df['Tid'] = pd.to_datetime((merged_df['Date_x'] + ' ' + merged_df['Time_x']))
     merged_df = merged_df.drop(['Date_x', 'Time_x', 'ID'], axis=1)
-    
+    time_df = merged_df["Tid"]
+    merged_df = merged_df.drop(["Tid"], axis = 1)
+    merged_df = merged_df.applymap(convert_to_float)
+    merged_df["Tid"] = time_df
+    merged_df['Tid'] = merged_df['Tid'].apply(lambda x: x.replace(day=x.month, month=x.day))
+    merged_df["3201-OE501"] = merged_df["3201-OE501"] * 10
+    merged_df["3202-OE501"] = merged_df["3202-OE501"] * 10
+    merged_df["3203-OE501"] = merged_df["3203-OE501"] * 10
+
     column_mapping = {
             '3501-RT503': 'Temperatur opp fra alle brønner (hovedrør)',
             '3501-RT403': 'Temperatur ned i 40 brønner',
@@ -99,7 +110,10 @@ def get_full_dataframe():
             '3203-RT401': 'Ned i bane 2 (temp)',
             '3203-RT501': 'Opp fra bane 2 (temp)',
             '3201-RT402': 'Varm (vet ikke helt)',
-            '3201-RT502': 'Kaldere (vet ikke helt)'
+            '3201-RT502': 'Kaldere (vet ikke helt)',
+            '3201-OE501' : 'Energi levert fra varmepumpe',
+            '3202-OE501' : 'Tilført energi - Bane 1',
+            '3203-OE501' : 'Tilført energi - Bane 2'
         }
     
     merged_df.rename(columns=column_mapping, inplace=True)
@@ -107,8 +121,19 @@ def get_full_dataframe():
 
 def show_dashboard():
     merged_df = get_full_dataframe()
-    st.write(merged_df)
-    st.bar_chart(data = merged_df, x = "Tid", y = "3201-OE501")
+    with st.expander("Data", expanded = False):
+        st.write(merged_df)
+    c1, c2 = st.columns(2)
+    with c1:
+        st.metric("Tilført energi - Bane 1", value = f"{int(merged_df['Tilført energi - Bane 1'].to_numpy()[-1]):,} kWh".replace(",", " "))
+    with c2:
+        st.metric("Tilført energi - Bane 2", value = f"{int(merged_df['Tilført energi - Bane 2'].to_numpy()[-1]):,} kWh".replace(",", " "))
+    #--
+    c1, c2 = st.columns(2)
+    with c1:
+        st.bar_chart(merged_df['Tilført energi - Bane 1'].to_numpy()[-48:-1])
+    with c2:
+        st.bar_chart(merged_df['Tilført energi - Bane 2'].to_numpy()[-48:-1])
 
 def main():
     streamlit_settings()
