@@ -132,6 +132,8 @@ def show_dashboard():
     c1, c2 = st.columns(2)
     with c1:
         st.bar_chart(merged_df['Tilført energi - Bane 1'].to_numpy()[-48:-1])
+    #st.bar_chart(data = merged_df, x = "Tid", y = "Tilført energi - Bane 1")
+        #st.bar_chart(data = merged_df, x = )
     with c2:
         st.bar_chart(merged_df['Tilført energi - Bane 2'].to_numpy()[-48:-1])
 
