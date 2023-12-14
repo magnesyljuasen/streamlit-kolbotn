@@ -87,7 +87,7 @@ def get_full_dataframe():
     merged_df = merged_df.drop(["Tid"], axis = 1)
     merged_df = merged_df.applymap(convert_to_float)
     merged_df["Tid"] = time_df
-    merged_df['Tid'] = merged_df['Tid'].apply(lambda x: x.replace(day=x.month, month=x.day))
+    #merged_df['Tid'] = merged_df['Tid'].apply(lambda x: x.replace(day=x.month, month=x.day))
     merged_df["3201-OE501"] = merged_df["3201-OE501"] * 10
     merged_df["3202-OE501"] = merged_df["3202-OE501"] * 10
     merged_df["3203-OE501"] = merged_df["3203-OE501"] * 10
@@ -120,29 +120,67 @@ def get_full_dataframe():
     return merged_df
 
 def show_dashboard():
+    st.subheader("Energi")
+    #--
     merged_df = get_full_dataframe()
     with st.expander("Data", expanded = False):
         st.write(merged_df)
+    st.selectbox("Velg modus", options = [""])
+    st.selectbox("Velg oppløsning", options = [""])
     c1, c2 = st.columns(2)
     with c1:
         st.metric("Tilført energi - Bane 1", value = f"{int(merged_df['Tilført energi - Bane 1'].to_numpy()[-1]):,} kWh".replace(",", " "))
     with c2:
         st.metric("Tilført energi - Bane 2", value = f"{int(merged_df['Tilført energi - Bane 2'].to_numpy()[-1]):,} kWh".replace(",", " "))
     #--
+    
     c1, c2 = st.columns(2)
+    
     with c1:
-        st.bar_chart(merged_df['Tilført energi - Bane 1'].to_numpy()[-48:-1])
+        st.metric("Siste 24 timer", value = f"{int(merged_df['Tilført energi - Bane 1'].to_numpy()[-1] - merged_df['Tilført energi - Bane 1'].to_numpy()[-24]):,} kWh".replace(",", " "))
+        st.bar_chart(merged_df['Tilført energi - Bane 1'].to_numpy())
     #st.bar_chart(data = merged_df, x = "Tid", y = "Tilført energi - Bane 1")
         #st.bar_chart(data = merged_df, x = )
     with c2:
-        st.bar_chart(merged_df['Tilført energi - Bane 2'].to_numpy()[-48:-1])
+        st.metric("Siste 24 timer", value = f"{int(merged_df['Tilført energi - Bane 2'].to_numpy()[-1] - merged_df['Tilført energi - Bane 2'].to_numpy()[-24]):,} kWh".replace(",", " "))
+        st.bar_chart(merged_df['Tilført energi - Bane 2'].to_numpy())
+    #--
+    st.subheader("Temperaturer")
+    st.write("Kommer ...")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.line_chart(merged_df['Opp fra bane 1 (temp)'])
+    with c2:
+        st.line_chart(merged_df['Ned i bane 1 (temp)'])
+        
+
+def embed_url_in_iframe(url):
+    html = f'<iframe src="{url}" width="800" height="600" frameborder="0"></iframe>'
+    st.components.v1.html(html, width=800, height=600)
+
+def show_weather_statistics():
+    url1 = "https://xn--vindn-qra.no/webkamera/viken/nordre-follo/sofiemyr-e6-taraldrud-(retning-taraldrud)-d0025d"
+    url2 = "https://pent.no/59.79672,10.81356"
+    url3 = "https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-74394/Norge/Viken/Nordre%20Follo/Sofiemyr"
+    c1, c2 = st.columns(2)
+    with c1:
+        embed_url_in_iframe(url = url1)
+    with c2:
+        embed_url_in_iframe(url = url2)
+    #embed_url_in_iframe(url = url3)
+
+
 
 def main():
     streamlit_settings()
     name, authentication_status, username, authenticator = login()
     frontpage(name, authentication_status, username, authenticator)
+    st.info("Sette opp mail direkte til grunnvarme@asplanviak.no")
     st.title("Driftsovervåkning")
     show_dashboard()
+    show_weather_statistics()
+
+    
 
 
 if __name__ == "__main__":
