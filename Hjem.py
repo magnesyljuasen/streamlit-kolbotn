@@ -10,6 +10,8 @@ from src.scripts import streamlit_settings, login
 import pymongo
 import pandas as pd
 import numpy as np
+import plotly.express as px
+
 
 def frontpage(name, authentication_status, username, authenticator):
     # ugyldig passord
@@ -87,6 +89,7 @@ def get_full_dataframe():
     merged_df = merged_df.drop(["Tid"], axis = 1)
     merged_df = merged_df.applymap(convert_to_float)
     merged_df["Tid"] = time_df
+    merged_df = merged_df.sort_values('Tid')
     #merged_df['Tid'] = merged_df['Tid'].apply(lambda x: x.replace(day=x.month, month=x.day))
     merged_df["3201-OE501"] = merged_df["3201-OE501"] * 10
     merged_df["3202-OE501"] = merged_df["3202-OE501"] * 10
@@ -119,54 +122,143 @@ def get_full_dataframe():
     merged_df.rename(columns=column_mapping, inplace=True)
     return merged_df
 
+def download_csv(dataframe):
+    csv_file = dataframe.to_csv(index=False)
+    b64 = base64.b64encode(csv_file.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="data.csv">Trykk her for å laste ned data</a>'
+    return href
+
+def show_energy_plot(merged_df, bane):
+    merged_df['Change_Per_Unit'] = merged_df[bane].diff()
+    merged_df.at[0, 'Change_Per_Unit'] = 0
+    st.metric("Siste 24 timer", value = f"{int(merged_df[bane].to_numpy()[-1] - merged_df[bane].to_numpy()[-24]):,} kWh".replace(",", " "))
+    fig = px.line(merged_df, x='Tid', y=bane, labels={'Value': bane, 'Timestamp': 'Tid'}, color_discrete_sequence=["black"])
+    fig.add_scatter(x=merged_df['Tid'], y=merged_df['Change_Per_Unit'], mode='lines', yaxis="y2", line=dict(color='rgba(0, 0, 255, 0.2)'))
+    fig.update_xaxes(type='category')
+    average_cummulative = np.average(merged_df[bane].to_numpy())
+    average_increase = np.average(merged_df['Change_Per_Unit'].to_numpy())
+    fig.update_xaxes(
+        ticks="outside",
+        #linecolor="black",
+        #gridcolor="lightgrey",
+        gridwidth=0.3,
+    )
+    fig.update_yaxes(
+        tickformat=",",
+        ticks="outside",
+        #linecolor="black",
+        #gridcolor="lightgrey",
+        gridwidth=0.3,
+    )
+    fig.update_layout(
+        showlegend=False,
+        yaxis=dict(range=[average_cummulative-average_cummulative/10, average_cummulative+average_cummulative/10]),
+        margin=dict(l=0,r=0,b=0,t=0,pad=0),
+        separators="* .*",
+        yaxis_title="Energi [kWh]",
+        xaxis_title="",
+        yaxis2=dict(
+            title='Effekt [kW]',
+            overlaying='y',
+            side='right',
+            range=[0, average_increase+average_increase/0.5]
+        ),
+        )
+    st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
+
+def show_temperature_plot(merged_df, series, min_value, max_value):
+    fig = px.line(merged_df, x='Tid', y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=["black"])
+    fig.update_xaxes(type='category')
+    fig.update_xaxes(
+        ticks="outside",
+        #linecolor="black",
+        #gridcolor="lightgrey",
+        gridwidth=0.3,
+    )
+    fig.update_yaxes(
+        tickformat=",",
+        ticks="outside",
+        #linecolor="black",
+        #gridcolor="lightgrey",
+        gridwidth=0.3,
+    )
+    fig.update_layout(
+        showlegend=False,
+        yaxis=dict(range=[min_value, max_value]),
+        margin=dict(l=0,r=0,b=0,t=0,pad=0),
+        #separators="* .*",
+        yaxis_title="Temperatur [grader]",
+        xaxis_title="",
+        )
+    st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
+
 def show_dashboard():
-    st.subheader("Energi")
+    #--
+    with st.sidebar:
+        st.selectbox("Velg modus", options = [""])
+        st.selectbox("Velg oppløsning", options = [""])
     #--
     merged_df = get_full_dataframe()
-    with st.expander("Data", expanded = False):
+    with st.expander("Se data", expanded = False):
         st.write(merged_df)
-    st.selectbox("Velg modus", options = [""])
-    st.selectbox("Velg oppløsning", options = [""])
-    c1, c2 = st.columns(2)
-    with c1:
-        st.metric("Tilført energi - Bane 1", value = f"{int(merged_df['Tilført energi - Bane 1'].to_numpy()[-1]):,} kWh".replace(",", " "))
-    with c2:
-        st.metric("Tilført energi - Bane 2", value = f"{int(merged_df['Tilført energi - Bane 2'].to_numpy()[-1]):,} kWh".replace(",", " "))
-    #--
+        st.markdown(download_csv(merged_df), unsafe_allow_html=True)
+    with st.expander("Vær", expanded = False):
+        show_weather_statistics()
+    with st.expander("Webkamera", expanded = False):
+        show_webcam()
     
-    c1, c2 = st.columns(2)
-    
-    with c1:
-        st.metric("Siste 24 timer", value = f"{int(merged_df['Tilført energi - Bane 1'].to_numpy()[-1] - merged_df['Tilført energi - Bane 1'].to_numpy()[-24]):,} kWh".replace(",", " "))
-        st.bar_chart(merged_df['Tilført energi - Bane 1'].to_numpy())
-    #st.bar_chart(data = merged_df, x = "Tid", y = "Tilført energi - Bane 1")
-        #st.bar_chart(data = merged_df, x = )
-    with c2:
-        st.metric("Siste 24 timer", value = f"{int(merged_df['Tilført energi - Bane 2'].to_numpy()[-1] - merged_df['Tilført energi - Bane 2'].to_numpy()[-24]):,} kWh".replace(",", " "))
-        st.bar_chart(merged_df['Tilført energi - Bane 2'].to_numpy())
+    with st.expander("Energi", expanded = True):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.metric("Tilført energi - Bane 1", value = f"{int(merged_df['Tilført energi - Bane 1'].to_numpy()[-1]):,} kWh".replace(",", " "))
+        with c2:
+            st.metric("Tilført energi - Bane 2", value = f"{int(merged_df['Tilført energi - Bane 2'].to_numpy()[-1]):,} kWh".replace(",", " "))
+        #--
+        c1, c2 = st.columns(2)
+        with c1:
+            show_energy_plot(merged_df, bane = "Tilført energi - Bane 1")
+        with c2:
+            show_energy_plot(merged_df, bane = "Tilført energi - Bane 2")
+        #--
+    with st.expander("Temperatur til baner", expanded = False):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("Til bane 1")
+            show_temperature_plot(merged_df = merged_df, series = 'Ned i bane 1 (temp)', min_value = 0, max_value = 8)
+        with c2:
+            st.markdown("Fra bane 1")
+            show_temperature_plot(merged_df = merged_df, series = 'Opp fra bane 1 (temp)', min_value = 0, max_value = 8)
     #--
-    st.subheader("Temperaturer")
-    st.write("Kommer ...")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.line_chart(merged_df['Opp fra bane 1 (temp)'])
-    with c2:
-        st.line_chart(merged_df['Ned i bane 1 (temp)'])
+    with st.expander("Temperatur til brønner", expanded = False):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("Til 40 brønner")
+            show_temperature_plot(merged_df = merged_df, series = 'Temperatur ned i 40 brønner', min_value = 0, max_value = 12)
+            st.markdown("Til 20 brønner")
+            show_temperature_plot(merged_df = merged_df, series = 'Temperatur ned i 20 brønner', min_value = 0, max_value = 12)
+        with c2:
+            st.markdown("Fra 40 brønner")
+            show_temperature_plot(merged_df = merged_df, series = 'Temperatur opp fra 40 brønner', min_value = 0, max_value = 12)
+            st.markdown("Fra 20 brønner")
+            show_temperature_plot(merged_df = merged_df, series = 'Temperatur opp fra 20 brønner', min_value = 0, max_value = 12)
+            
         
 
 def embed_url_in_iframe(url):
-    html = f'<iframe src="{url}" width="800" height="600" frameborder="0"></iframe>'
-    st.components.v1.html(html, width=800, height=600)
+    html = f'<div style="display: flex; justify-content: center;"><iframe src="{url}" width="800" height="600"></iframe></div>'
+    st.components.v1.html(html, height = 600)
 
 def show_weather_statistics():
-    url1 = "https://xn--vindn-qra.no/webkamera/viken/nordre-follo/sofiemyr-e6-taraldrud-(retning-taraldrud)-d0025d"
-    url2 = "https://pent.no/59.79672,10.81356"
-    url3 = "https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-74394/Norge/Viken/Nordre%20Follo/Sofiemyr"
-    c1, c2 = st.columns(2)
-    with c1:
-        embed_url_in_iframe(url = url1)
-    with c2:
-        embed_url_in_iframe(url = url2)
+    url_pent = "https://pent.no/59.79672,10.81356"
+    url_yr = "https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-74394/Norge/Viken/Nordre%20Follo/Sofiemyr"
+    embed_url_in_iframe(url = url_pent)
+
+def show_webcam():
+    url_webcam = "https://xn--vindn-qra.no/webkamera/viken/nordre-follo/sofiemyr-e6-taraldrud-(retning-taraldrud)-d0025d"
+    embed_url_in_iframe(url = url_webcam)
+    
+    #with c2:
+    
     #embed_url_in_iframe(url = url3)
 
 
@@ -175,10 +267,7 @@ def main():
     streamlit_settings()
     name, authentication_status, username, authenticator = login()
     frontpage(name, authentication_status, username, authenticator)
-    st.info("Sette opp mail direkte til grunnvarme@asplanviak.no")
-    st.title("Driftsovervåkning")
     show_dashboard()
-    show_weather_statistics()
 
     
 
