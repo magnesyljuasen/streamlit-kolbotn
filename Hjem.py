@@ -199,6 +199,7 @@ def show_dashboard():
         st.selectbox("Velg oppløsning", options = [""])
     #--
     merged_df = get_full_dataframe()
+    st.warning("Under arbeid ... ")
     with st.expander("Se data", expanded = False):
         st.write(merged_df)
         st.markdown(download_csv(merged_df), unsafe_allow_html=True)
