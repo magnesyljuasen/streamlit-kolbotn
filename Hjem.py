@@ -161,7 +161,7 @@ def show_energy_plot(merged_df, bane):
             title='Effekt [kW]',
             overlaying='y',
             side='right',
-            range=[0, average_increase+average_increase/0.5]
+            range=[0, 500]
         ),
         )
     st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
