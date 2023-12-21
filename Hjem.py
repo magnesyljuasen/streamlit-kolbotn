@@ -201,6 +201,7 @@ def show_dashboard():
     merged_df = get_full_dataframe()
     st.warning("Under arbeid ... ")
     with st.expander("Se data", expanded = False):
+        merged_df['Tilført energi - Bane 1'] = merged_df['Tilført energi - Bane 1'] - 435675 
         st.write(merged_df)
         st.markdown(download_csv(merged_df), unsafe_allow_html=True)
     with st.expander("Vær", expanded = False):
