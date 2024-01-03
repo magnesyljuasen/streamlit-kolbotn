@@ -383,7 +383,6 @@ class Dashboard:
     
     def select_mode(self):
         with st.expander("Driftsmodus", expanded = True):
-            st.warning("Mangler en kolonne som sier noe om modus")
             st.selectbox("Velg modus", options = ["", "Modus 1", "Modus 2", "Modus 3", "Modus 4"])
             st.caption("*:blue[Vinter]*")
             st.write("1) :blue[Vi henter varme direkte fra varmelager og leverer til baner]")
@@ -391,6 +390,7 @@ class Dashboard:
             st.caption("*:red[Sommer]*")
             st.write("3) :red[Vi henter varme direkte fra baner og lader opp varmelager]")
             st.write("4) :red[Vi henter varme fra baner via varmepumpe og lader opp varmelager]")
+            st.warning("Mangler en kolonne som sier noe om modus")
 
     def main(self):
         self.streamlit_settings()
