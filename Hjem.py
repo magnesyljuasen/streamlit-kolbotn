@@ -419,7 +419,6 @@ class Dashboard:
             df = self.date_picker(df = df) # top level filter
             df = self.resolution_picker(df = df)
             self.select_mode()
-            
         with st.container():
             self.default_kpi(df = df) # kpis
         with st.container():
