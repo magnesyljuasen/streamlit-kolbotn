@@ -121,17 +121,18 @@ class Dashboard:
                 '3501-RT502': 'Temperatur opp fra 20 brønner',
                 '3501-RT401': 'Temperatur ut fra varmepumpe (kald side)',
                 '3501-RT504': 'Temperatur inn til varmepumpe (kald side)',
-                '3501-RT002': 'Finner ikke',
+                '3501-RT001': 'Temperaturføler i brønn (ytre)',
+                '3501-RT002': 'Temperaturføler i brønn (midten)',
                 '3501-RP001': 'Trykkmåler (banekrets) (pascal)',
                 '3501-RP002': 'Trykkmåler (varmepumpe-krets) (pascal)',
                 '3201-RT401': 'Turtemperatur VP (varm side)',
                 '3202-RT501': 'Returtemperatur VP (varm side)',
-                '3202-RT401': 'Ned i bane 1 (temp)',
-                '3202-RT501': 'Opp fra bane 1 (temp)',
-                '3203-RT401': 'Ned i bane 2 (temp)',
-                '3203-RT501': 'Opp fra bane 2 (temp)',
-                '3201-RT402': 'Varm (vet ikke helt)',
-                '3201-RT502': 'Kaldere (vet ikke helt)',
+                '3202-RT401': 'Til bane 1',
+                '3202-RT501': 'Fra bane 1',
+                '3203-RT401': 'Til bane 2',
+                '3203-RT501': 'Fra bane 2',
+                #'3201-RT402': 'Varm (vet ikke helt)',
+                #'3201-RT502': 'Kaldere (vet ikke helt)',
                 '3201-OE501' : 'Energi levert fra varmepumpe',
                 '3202-OE501' : 'Tilført energi - Bane 1',
                 '3203-OE501' : 'Tilført energi - Bane 2'
@@ -147,83 +148,95 @@ class Dashboard:
         href = f'<a href="data:file/csv;base64,{b64}" download="data.csv">Trykk her for å laste ned data</a>'
         return href
 
-    def energy_plot(self, df, series, series_name):
-        #df['Change_Per_Unit'] = df[series_name].diff()
-        #df.at[0, 'Change_Per_Unit'] = 0
-        fig = px.line(df, x='Tid', y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=["rgba(29, 60, 52, 0.75)"])
-        #fig.add_scatter(x=df['Tid'], y=df['Change_Per_Unit'], mode='lines', yaxis="y2", line=dict(color='rgba(0, 0, 255, 1)'))
-        fig.update_xaxes(type='category')
-        average_cummulative = np.average(df[series].to_numpy())
-        #average_increase = np.average(df['Change_Per_Unit'].to_numpy())
+    def energy_effect_plot(self, df, series, series_label, average = False, separator = False, min_value = None, max_value = None):
+        fig = px.line(df, x=df['Tidsverdier'], y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=["rgba(29, 60, 52, 0.75)"])
         fig.update_xaxes(
+            title='',
+            type='category',
             gridwidth=0.3,
-        )
+            tickmode='auto',
+            nticks=4,  
+            tickangle=30)
         fig.update_yaxes(
-            tickformat=",",
-            ticks="outside",
-            gridwidth=0.3,
-        )
-        fig.update_layout(
-            xaxis=dict(showticklabels=False),
-            showlegend=False,
-            yaxis=dict(range=[average_cummulative-average_cummulative/10, average_cummulative+average_cummulative/10]),
-            margin=dict(l=0,r=0,b=0,t=0,pad=0),
-            separators="* .*",
-            yaxis_title=f"Energi {series_name.lower()} (kWh)",
-            xaxis_title="",
-            height = 200
-            )
-        st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
-
-    def temperature_plot(self, df, series, series_name, min_value = 0, max_value = 10):
-        fig = px.line(df, x='Tid', y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=[f"rgba(29, 60, 52, 0.75)"])
-        fig.update_xaxes(type='category')
-        fig.update_xaxes(
-            gridwidth=0.3,
-        )
-        fig.update_yaxes(
+            title=f"Temperatur (ºC)",
             tickformat=",",
             ticks="outside",
             gridcolor="lightgrey",
             gridwidth=0.3,
         )
-
+        if average == True:
+            average = df[series].mean()
+            delta_average = average * 0.98
+            fig.update_layout(yaxis=dict(range=[average - delta_average, average + delta_average]))
+        if separator == True:
+            fig.update_layout(separators="* .*")
+            
         fig.update_layout(
-            xaxis=dict(showticklabels=False),
+                #xaxis=dict(showticklabels=False),
+                showlegend=False,
+                margin=dict(l=20,r=20,b=20,t=20,pad=0),
+                yaxis_title=series_label,
+                yaxis=dict(range=[min_value, max_value]),
+                xaxis_title="",
+                height = 300
+                )
+        st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
+
+    def temperature_plot(self, df, series, min_value = 0, max_value = 10):
+        fig = px.line(df, x=df['Tidsverdier'], y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=[f"rgba(29, 60, 52, 0.75)"])
+        fig.update_xaxes(type='category')
+        fig.update_xaxes(
+            title='',
+            type='category',
+            gridwidth=0.3,
+            tickmode='auto',
+            nticks=4,  
+            tickangle=30)
+        fig.update_yaxes(
+            title=f"Temperatur (ºC)",
+            tickformat=",",
+            ticks="outside",
+            gridcolor="lightgrey",
+            gridwidth=0.3,
+        )
+        fig.update_layout(
+            #xaxis=dict(showticklabels=False),
             showlegend=False,
             yaxis=dict(range=[min_value, max_value]),
-            margin=dict(l=10,r=10,b=10,t=10,pad=0),
+            margin=dict(l=20,r=20,b=20,t=20,pad=0),
             #separators="* .*",
-            yaxis_title=f"Temperatur {series_name.lower()} (ºC)",
+            #yaxis_title=f"Temperatur {series_name.lower()} (ºC)",
             xaxis_title="",
-            height = 200,
+            height = 300,
             )
         st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
 
-    def temperature_plot_two_series(self, df, series_1, series_name_1, series_2, series_name_2, min_value = 0, max_value = 10):
-        fig1 = px.line(df, x='Tid', y=series_1, labels={'Value': series_1, 'Timestamp': 'Tid'}, color_discrete_sequence=[f"rgba(29, 60, 52, 0.5)"])
-        fig2 = px.line(df, x='Tid', y=series_2, labels={'Value': series_2, 'Timestamp': 'Tid'}, color_discrete_sequence=[f"rgba(29, 60, 52, 0.5)"])
+    def temperature_plot_two_series(self, df, series_1, series_2, min_value = 0, max_value = 10):
+        fig1 = px.line(df, x=df['Tidsverdier'], y=series_1, labels={'Value': series_1, 'Timestamp': 'Tid'}, color_discrete_sequence=[f"rgba(29, 60, 52, 0.5)"])
+        fig2 = px.line(df, x=df['Tidsverdier'], y=series_2, labels={'Value': series_2, 'Timestamp': 'Tid'}, color_discrete_sequence=[f"rgba(29, 60, 52, 0.5)"])
         fig = fig1
         fig.add_traces(fig2.data)
-        fig.update_xaxes(type='category')
         fig.update_xaxes(
+            title='',
+            type='category',
             gridwidth=0.3,
-        )
+            tickmode='auto',
+            nticks=4,  
+            tickangle=30)
         fig.update_yaxes(
+            title=f"Temperatur (ºC)",
             tickformat=",",
             ticks="outside",
             gridcolor="lightgrey",
             gridwidth=0.3,
         )
         fig.update_layout(
-            xaxis=dict(showticklabels=False),
+            #xaxis=dict(showticklabels=False),
             showlegend=False,
             yaxis=dict(range=[min_value, max_value]),
-            margin=dict(l=10,r=10,b=10,t=10,pad=0),
+            margin=dict(l=20,r=20,b=20,t=20,pad=0),
             #separators="* .*",
-            yaxis_title=f"Temperatur (ºC)",
-            xaxis_title="",
-            height = 200,
+            height = 300,
             )
         st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
 
@@ -252,57 +265,131 @@ class Dashboard:
             st.stop()
         return filtered_df
     
-    def column_to_metric(self, df, metric_name, unit, rounding = -2):
+    def column_to_metric(self, df, metric_name, unit, rounding = -1):
         metric = f"{round(int(df[metric_name].to_numpy()[-1]), rounding):,} {unit}".replace(",", " ")
         return metric
     
-    def column_to_delta(self, df, metric_name, unit, rounding = -2):
-        delta = f"Siste døgn: {round(int(df[metric_name].to_numpy()[-1] - df[metric_name].to_numpy()[-23]), rounding):,} {unit}".replace(",", " ")
+    def column_to_delta(self, df, metric_name, unit, last_value, last_value_text, rounding = -2):
+        delta = f"Siste {last_value_text}: {round(int(df[metric_name].to_numpy()[-1] - df[metric_name].to_numpy()[last_value]), rounding):,} {unit}".replace(",", " ")
         return delta
     
     def default_kpi(self, df):
+        if (self.selected_resolution == "H") or (self.selected_resolution == "Rådata"): 
+            last_value = -23
+            last_value_text = "døgn"
+        elif (self.selected_resolution == "D"):
+            last_value = -2
+            last_value_text = "døgn"
+        elif (self.selected_resolution == "W"):
+            last_value = -2
+            last_value_text = "uke"
+        elif (self.selected_resolution == "M"):
+            last_value = -2
+            last_value_text = "måned"
+        elif (self.selected_resolution == "Y"):
+            last_value = -2
+            last_value_text = "år"
         kpi1, kpi2, kpi3 = st.columns(3)
         kpi1.metric(
-            label = "Energi til bane 1 (totalt)",
+            label = "Energi tilført bane 1 (totalt)",
             value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 1", unit = "kWh"),
-            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 1", unit = "kWh")
+            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 1", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
         )
         kpi2.metric(
-            label = "Energi til bane 2 (totalt)",
+            label = "Energi tilført bane 2 (totalt)",
             value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh"),
-            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh")
+            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
         )
         kpi3.metric(
-            label="Energi fra varmepumpe (totalt)",
+            label="Energi levert fra varmepumpe (totalt)",
             value = self.column_to_metric(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh"),
-            delta = self.column_to_delta(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh")
+            delta = self.column_to_delta(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
         )
 
     def default_charts(self, df):
-        c1, c2 = st.columns(2)
+        c1, c2, c3 = st.columns(3)
         with c1:
-            self.temperature_plot(df = df, series = 'Opp fra bane 1 (temp)', series_name = "Fra bane 1", min_value = 0, max_value = 5)
+            st.caption("**Temperatur fra bane 1**")
+            self.temperature_plot(df = df, series = 'Fra bane 1', min_value = 0, max_value = 5)
         with c2:
-            self.temperature_plot(df = df, series = 'Opp fra bane 2 (temp)', series_name = "Fra bane 2", min_value = 0, max_value = 15)
-        c1, c2 = st.columns(2)
+            st.caption("**Temperatur fra bane 2**")
+            self.temperature_plot(df = df, series = 'Fra bane 2', min_value = 0, max_value = 15)
+        with c3:
+            st.caption("**Turtemperatur varmepumpe (varm side)**")
+            self.temperature_plot(df = df, series = 'Turtemperatur VP (varm side)', min_value = 10, max_value = 40)
+        c1, c2, c3 = st.columns(3)
         with c1:
-            self.energy_plot(df = df, series = "Tilført energi - Bane 1", series_name = "Tilført bane 1")
+            st.caption("**Energi tilført bane 1**")
+            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 1", series_label = "Energi (kWh)", separator = True)
         with c2:
-            self.energy_plot(df = df, series = "Tilført energi - Bane 2", series_name = "Tilført bane 2")
-        c1, c2 = st.columns(2)
+            st.caption("**Energi tilført bane 2**")
+            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 2", series_label = "Energi (kWh)")
+        with c3:
+            st.caption("**Energi levert fra varmepumpe**")
+            self.energy_effect_plot(df = df, series = "Energi levert fra varmepumpe", series_label = "Energi (kWh)", separator = True)
+        c1, c2, c3 = st.columns(3)
         with c1:
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur ned i 40 brønner', series_name_1 = 'Til 40 brønner', series_2 = 'Temperatur ned i 20 brønner', series_name_2 = 'Til 20 brønner', min_value = 0, max_value = 10)
+            st.caption("**Effekt tilført bane 1**")
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 1", series_label = "Effekt (kW)", average = True, min_value = 0, max_value = 400)
         with c2:
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur opp fra 40 brønner', series_name_1 = 'Fra 40 brønner', series_2 = 'Temperatur opp fra 20 brønner', series_name_2 = 'Fra 20 brønner', min_value = 0, max_value = 10)
-            
+            st.caption("**Effekt tilført bane 2**")
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 2", series_label = "Effekt (kW)", average = True, min_value = 0, max_value = 400)
+        with c3:
+            st.caption("**Effekt levert fra varmepumpe**")
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Energi (kWh)", average = True, min_value = 0, max_value = 400)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.caption("**Temperatur ned i 40 brønner**")
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur ned i 40 brønner', series_2 = 'Temperatur ned i 20 brønner', min_value = 0, max_value = 15)
+        with c2:
+            st.caption("**Temperatur opp fra 20 og 40 brønner**")
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur opp fra 40 brønner', series_2 = 'Temperatur opp fra 20 brønner', min_value = 0, max_value = 15)
+        with c3:
+            st.caption("**Temperaturføler i brønn (ytre og midten)**")
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperaturføler i brønn (ytre)', series_2 = 'Temperaturføler i brønn (midten)', min_value = 0, max_value = 15)
+
     def show_weather_stats(self):
         c1, c2 = st.columns(2)
         with c1:
-            with st.expander("Vær", expanded = True):
+            with st.expander("Vær", expanded = False):
                 self.show_weather_statistics()
         with c2:
-            with st.expander("Webkamera", expanded = True):
+            with st.expander("Webkamera", expanded = False):
                 self.show_webcam()
+
+    def add_columns_to_df(self, df):
+        window_size = 3
+        df['Tilført effekt - Bane 1'] = df["Tilført energi - Bane 1"].diff().rolling(window=window_size).mean()
+        df['Tilført effekt - Bane 2'] = df["Tilført energi - Bane 2"].diff().rolling(window=window_size).mean()
+        df['Tilført effekt - Varmepumpe'] = df["Energi levert fra varmepumpe"].diff().rolling(window=window_size).mean()
+        return df
+    
+    def resolution_picker(self, df):
+        selected_option = st.selectbox("Velg oppløsning", options = ["Rådata", "Timer", "Daglig", "Ukentlig", "Månedlig", "År"])
+        resolution_mapping = {
+            "Rådata" : "Rådata",
+            "Timer" : "H",
+            "Daglig": "D",
+            "Ukentlig": "W",
+            "Månedlig": "M",
+            "År" : "Y"
+        }
+        self.selected_resolution = resolution_mapping[selected_option]
+        if self.selected_resolution != "Rådata":
+            numeric_columns = df.select_dtypes(include=[float, int]).columns.tolist()
+            df = df.groupby(pd.Grouper(key='Tid', freq=self.selected_resolution, offset='0S'))[numeric_columns].mean().reset_index()
+        df["Tidsverdier"] = df['Tid'].dt.strftime("%d/%m-%y, %H:01").tolist()
+        return df
+    
+    def select_mode(self):
+        with st.expander("Driftsmodus", expanded = True):
+            st.selectbox("Velg modus", options = ["Modus 1", "Modus 2", "Modus 3", "Modus 4"])
+            st.caption("*:blue[Vinter]*")
+            st.write("1) :blue[Vi henter varme direkte fra varmelager og leverer til baner]")
+            st.write("2) :blue[Varmepumpe leverer varme til baner]")
+            st.caption("*:red[Sommer]*")
+            st.write("3) :red[Vi henter varme direkte fra baner og lader opp varmelager]")
+            st.write("4) :red[Vi henter varme fra baner via varmepumpe og lader opp varmelager]")
 
     def main(self):
         self.streamlit_settings()
@@ -312,15 +399,22 @@ class Dashboard:
             self.streamlit_login_page(name, authentication_status, username, authenticator)
         st.title("Sesongvarmelager KIL Drift") # page title
         df = self.get_full_dataframe() # get dataframe
+        df = self.add_columns_to_df(df)
         with st.sidebar:
-            df = self.date_picker(df = df) # top level filter 
-            st.selectbox("Velg modus", options = [""])
-            st.selectbox("Velg oppløsning", options = [""])
+            df = self.date_picker(df = df) # top level filter
+            df = self.resolution_picker(df = df)
+            self.select_mode()
+            
+
         with st.container():
             self.default_kpi(df = df) # kpis
         with st.container():
             self.default_charts(df = df)
-        st.dataframe(data = df, height = 200, use_container_width = True, ) # data table
+        st.dataframe(
+            data = df, 
+            height = 300, 
+            use_container_width = True,
+            ) # data table
         st.markdown(self.download_csv(df), unsafe_allow_html=True) # download button
         self.show_weather_stats()
 
