@@ -383,7 +383,8 @@ class Dashboard:
     
     def select_mode(self):
         with st.expander("Driftsmodus", expanded = True):
-            st.selectbox("Velg modus", options = ["Modus 1", "Modus 2", "Modus 3", "Modus 4"])
+            st.warning("Mangler en kolonne som sier noe om modus")
+            st.selectbox("Velg modus", options = ["", "Modus 1", "Modus 2", "Modus 3", "Modus 4"])
             st.caption("*:blue[Vinter]*")
             st.write("1) :blue[Vi henter varme direkte fra varmelager og leverer til baner]")
             st.write("2) :blue[Varmepumpe leverer varme til baner]")
