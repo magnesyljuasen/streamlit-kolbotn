@@ -126,3 +126,4 @@ whiteboxgui==2.3.0
 widgetsnbextension==4.0.9
 xyzservices==2023.7.0
 zipp==3.17.0
+openpyxl==3.1.2
