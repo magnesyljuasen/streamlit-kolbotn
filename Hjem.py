@@ -148,8 +148,11 @@ class Dashboard:
         href = f'<a href="data:file/csv;base64,{b64}" download="data.csv">Trykk her for å laste ned data</a>'
         return href
 
-    def energy_effect_plot(self, df, series, series_label, average = False, separator = False, min_value = None, max_value = None):
-        fig = px.line(df, x=df['Tidsverdier'], y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=["rgba(29, 60, 52, 0.75)"])
+    def energy_effect_plot(self, df, series, series_label, average = False, separator = False, min_value = None, max_value = None, chart_type = "Line"):
+        if chart_type == "Line":
+            fig = px.line(df, x=df['Tidsverdier'], y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=["rgba(29, 60, 52, 0.75)"])
+        elif chart_type == "Bar":
+            fig = px.bar(df, x=df['Tidsverdier'], y=series, labels={'Value': series, 'Timestamp': 'Tid'}, color_discrete_sequence=["rgba(29, 60, 52, 0.75)"])
         fig.update_xaxes(
             title='',
             type='category',
@@ -347,6 +350,9 @@ class Dashboard:
         with c3:
             st.caption("**Temperaturføler i brønn (ytre og midten)**")
             self.temperature_plot_two_series(df = df, series_1 = 'Temperaturføler i brønn (ytre)', series_2 = 'Temperaturføler i brønn (midten)', min_value = 0, max_value = 15)
+        st.markdown("---")
+        st.caption("**Strømforbruk**")
+        self.energy_effect_plot(df = self.df_el, series = "kWh", series_label = "Strøm (kWh)", separator = True, chart_type = "Bar")
 
     def show_weather_stats(self):
         c1, c2 = st.columns(2)
@@ -392,6 +398,12 @@ class Dashboard:
             st.write("4) :red[Vi henter varme fra baner via varmepumpe og lader opp varmelager]")
             st.warning("Mangler en kolonne som sier noe om modus")
 
+    def get_electric_df(self):
+        df_el = pd.read_excel("src/data/elforbruk/data.xlsx")
+        df_el['dato'] = pd.to_datetime(df_el['dato'], format='%d.%m.%Y')
+        df_el['Tidsverdier'] = df_el['dato'].dt.strftime('%d/%m-%y, %H:%M')
+        self.df_el = df_el
+
     def main(self):
         self.streamlit_settings()
         c1, c2, c3 = st.columns([1,2,1])
@@ -400,13 +412,14 @@ class Dashboard:
             self.streamlit_login_page(name, authentication_status, username, authenticator)
         st.title("Sesongvarmelager KIL Drift") # page title
         df = self.get_full_dataframe() # get dataframe
+        self.get_electric_df()
+        
         df = self.add_columns_to_df(df)
         with st.sidebar:
             df = self.date_picker(df = df) # top level filter
             df = self.resolution_picker(df = df)
             self.select_mode()
             
-
         with st.container():
             self.default_kpi(df = df) # kpis
         with st.container():
