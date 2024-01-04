@@ -11,6 +11,7 @@ import yaml
 import base64
 from PIL import Image
 import datetime
+import requests
 
 class Dashboard:
     def __init__(self):
@@ -276,6 +277,31 @@ class Dashboard:
         delta = f"Siste {last_value_text}: {round(int(df[metric_name].to_numpy()[-1] - df[metric_name].to_numpy()[last_value]), rounding):,} {unit}".replace(",", " ")
         return delta
     
+    def get_temperature_series(self):
+        client_id = "248d45de-6fc1-4e3b-a4b0-e2932420605e"
+        endpoint = f"https://frost.met.no/observations/v0.jsonld?"
+        parameters = {
+            'sources' : 'SN17820',
+            'referencetime' : f"2023-11-01/{datetime.date.today()}",
+            'elements' : 'mean(air_temperature P1D)',
+            'timeoffsets': 'PT0H',
+            'timeresolutions' : 'P1D'
+            }
+        r = requests.get(endpoint, parameters, auth=(client_id,""))
+        json = r.json()["data"]
+        temperature_array, time_array = [], []
+        for i in range(0, len(json)):
+            reference_time = pd.to_datetime(json[i]["referenceTime"])
+            formatted_date = reference_time.strftime("%d/%m-%y, %H:01")
+            temperature = float(json[i]["observations"][0]["value"])
+            temperature_array.append(temperature)
+            time_array.append(formatted_date)
+        
+        self.df_temperature = pd.DataFrame({
+            "Tidsverdier" : time_array,
+            "Temperatur" : temperature_array
+            })
+    
     def default_kpi(self, df):
         if (self.selected_resolution == "H") or (self.selected_resolution == "Rådata"): 
             last_value = -23
@@ -323,23 +349,23 @@ class Dashboard:
         c1, c2, c3 = st.columns(3)
         with c1:
             st.caption("**Energi tilført bane 1**")
-            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 1", series_label = "Energi (kWh)", separator = True)
+            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 1", series_label = "Energi (kWh)", separator = True, chart_type = "Bar")
         with c2:
             st.caption("**Energi tilført bane 2**")
-            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 2", series_label = "Energi (kWh)")
+            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 2", series_label = "Energi (kWh)", chart_type = "Bar")
         with c3:
             st.caption("**Energi levert fra varmepumpe**")
-            self.energy_effect_plot(df = df, series = "Energi levert fra varmepumpe", series_label = "Energi (kWh)", separator = True)
+            self.energy_effect_plot(df = df, series = "Energi levert fra varmepumpe", series_label = "Energi (kWh)", separator = True, chart_type = "Bar")
         c1, c2, c3 = st.columns(3)
         with c1:
             st.caption("**Effekt tilført bane 1**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 1", series_label = "Effekt (kW)", average = True, min_value = 0, max_value = 400)
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 1", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400)
         with c2:
             st.caption("**Effekt tilført bane 2**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 2", series_label = "Effekt (kW)", average = True, min_value = 0, max_value = 400)
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 2", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400)
         with c3:
             st.caption("**Effekt levert fra varmepumpe**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Energi (kWh)", average = True, min_value = 0, max_value = 400)
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400, separator = False)
         c1, c2, c3 = st.columns(3)
         with c1:
             st.caption("**Temperatur ned i 40 brønner**")
@@ -353,6 +379,8 @@ class Dashboard:
         st.markdown("---")
         st.caption("**Strømforbruk**")
         self.energy_effect_plot(df = self.df_el, series = "kWh", series_label = "Strøm (kWh)", separator = True, chart_type = "Bar")
+        st.caption("**Utetemperatur fra nærmeste værstasjon**")
+        self.energy_effect_plot(df = self.df_temperature, series = "Temperatur", series_label = "Utetemperatur", separator = True, chart_type = "Line")
 
     def show_weather_stats(self):
         c1, c2 = st.columns(2)
@@ -413,6 +441,7 @@ class Dashboard:
         st.title("Sesongvarmelager KIL Drift") # page title
         df = self.get_full_dataframe() # get dataframe
         self.get_electric_df()
+        self.get_temperature_series()
         
         df = self.add_columns_to_df(df)
         with st.sidebar:
