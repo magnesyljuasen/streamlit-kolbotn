@@ -339,7 +339,7 @@ class Dashboard:
         c1, c2, c3 = st.columns(3)
         with c1:
             st.caption("**Temperatur fra bane 1**")
-            self.temperature_plot(df = df, series = 'Fra bane 1', min_value = 0, max_value = 5)
+            self.temperature_plot(df = df, series = 'Fra bane 1', min_value = -10, max_value = 5)
         with c2:
             st.caption("**Temperatur fra bane 2**")
             self.temperature_plot(df = df, series = 'Fra bane 2', min_value = 0, max_value = 15)
@@ -369,13 +369,13 @@ class Dashboard:
         c1, c2, c3 = st.columns(3)
         with c1:
             st.caption("**Temperatur ned i 40 brønner**")
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur ned i 40 brønner', series_2 = 'Temperatur ned i 20 brønner', min_value = 0, max_value = 15)
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur ned i 40 brønner', series_2 = 'Temperatur ned i 20 brønner', min_value = -5, max_value = 15)
         with c2:
             st.caption("**Temperatur opp fra 20 og 40 brønner**")
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur opp fra 40 brønner', series_2 = 'Temperatur opp fra 20 brønner', min_value = 0, max_value = 15)
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur opp fra 40 brønner', series_2 = 'Temperatur opp fra 20 brønner', min_value = -5, max_value = 15)
         with c3:
             st.caption("**Temperaturføler i brønn (ytre og midten)**")
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperaturføler i brønn (ytre)', series_2 = 'Temperaturføler i brønn (midten)', min_value = 0, max_value = 15)
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperaturføler i brønn (ytre)', series_2 = 'Temperaturføler i brønn (midten)', min_value = -5, max_value = 15)
         st.markdown("---")
         st.caption("**Strømforbruk**")
         self.energy_effect_plot(df = self.df_el, series = "kWh", series_label = "Strøm (kWh)", separator = True, chart_type = "Bar")
