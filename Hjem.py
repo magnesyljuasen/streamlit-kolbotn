@@ -258,6 +258,10 @@ class Dashboard:
         self.embed_url_in_iframe(url = url_webcam)
 
     def date_picker(self, df):
+        st.info(
+            """ Velg tidsintervall her 
+            for å filtere dataene. Alle Tall og grafer vil oppdatere seg. Her er det mulig å se verdier for en måned ved å filtrere for f.eks. 1. desember til 31. desember.
+            """, icon="ℹ️")
         date_range = st.date_input("Velg tidsintervall", (df["Tid"][0].to_pydatetime(), df["Tid"][len(df["Tid"]) - 1].to_pydatetime()))
         if len(date_range) == 1:
             st.error("Du må velge et tidsintervall")
@@ -274,7 +278,7 @@ class Dashboard:
         return metric
     
     def column_to_delta(self, df, metric_name, unit, last_value, last_value_text, rounding = -2):
-        delta = f"Siste {last_value_text}: {round(int(df[metric_name].to_numpy()[-1] - df[metric_name].to_numpy()[last_value]), rounding):,} {unit}".replace(",", " ")
+        delta = f"Forrige {last_value_text}: {round(int(df[metric_name].to_numpy()[-1] - df[metric_name].to_numpy()[last_value]), rounding):,} {unit}".replace(",", " ")
         return delta
     
     def get_temperature_series(self):
@@ -318,54 +322,74 @@ class Dashboard:
         elif (self.selected_resolution == "Y"):
             last_value = -2
             last_value_text = "år"
-        kpi1, kpi2, kpi3 = st.columns(3)
+        
+        kpi1, kpi2 = st.columns(2)
         kpi1.metric(
-            label = "Energi tilført bane 1 (totalt)",
-            value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 1", unit = "kWh"),
-            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 1", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
-        )
+            label = "Energi tilført bane 1 (gjeldende tidsintervall)",
+            value = f"{round(int(df['Tilført effekt - Bane 1'].sum()), -2):,} kWh".replace(",", " "),
+            help="Dette er energi tilført bane 1 i tidsintervallet."
+            )
+
         kpi2.metric(
-            label = "Energi tilført bane 2 (totalt)",
-            value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh"),
-            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
+            label = "Energi tilført bane 1 (frem til siste dato i tidsintervall)",
+            value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 1", unit = "kWh"),
+            help="Dette er energi tilført bane 1 frem til siste dato valgt i tidsintervallet."
         )
-        kpi3.metric(
-            label="Energi levert fra varmepumpe (totalt)",
-            value = self.column_to_metric(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh"),
-            delta = self.column_to_delta(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
-        )
+        st.markdown("---")
+#        kpi2.metric(
+#            label = "Energi tilført bane 2 (totalt)",
+#            value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh"),
+#            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
+#        )
+#        kpi3.metric(
+#            label="Energi levert fra varmepumpe (totalt)",
+#            value = self.column_to_metric(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh"),
+#            delta = self.column_to_delta(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
+#        )
 
     def default_charts(self, df):
-        c1, c2, c3 = st.columns(3)
+        c1, c2 = st.columns(2)
         with c1:
             st.caption("**Temperatur fra bane 1**")
             self.temperature_plot(df = df, series = 'Fra bane 1', min_value = -10, max_value = 5)
+#        with c2:
+#            st.caption("**Temperatur fra bane 2**")
+#            self.temperature_plot(df = df, series = 'Fra bane 2', min_value = 0, max_value = 15)
         with c2:
-            st.caption("**Temperatur fra bane 2**")
-            self.temperature_plot(df = df, series = 'Fra bane 2', min_value = 0, max_value = 15)
-        with c3:
             st.caption("**Turtemperatur varmepumpe (varm side)**")
             self.temperature_plot(df = df, series = 'Turtemperatur VP (varm side)', min_value = 10, max_value = 40)
-        c1, c2, c3 = st.columns(3)
+        c1, c2 = st.columns(2)
         with c1:
             st.caption("**Energi tilført bane 1**")
-            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 1", series_label = "Energi (kWh)", separator = True, chart_type = "Bar")
+            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 1", series_label = "Energi (kWh)", separator = True, chart_type = "Bar", min_value=0, max_value = 400000)
+#        with c2:
+#            st.caption("**Energi tilført bane 2**")
+#            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 2", series_label = "Energi (kWh)", chart_type = "Bar")
         with c2:
-            st.caption("**Energi tilført bane 2**")
-            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 2", series_label = "Energi (kWh)", chart_type = "Bar")
-        with c3:
             st.caption("**Energi levert fra varmepumpe**")
-            self.energy_effect_plot(df = df, series = "Energi levert fra varmepumpe", series_label = "Energi (kWh)", separator = True, chart_type = "Bar")
-        c1, c2, c3 = st.columns(3)
+            self.energy_effect_plot(df = df, series = "Energi levert fra varmepumpe", series_label = "Energi (kWh)", separator = True, chart_type = "Bar", min_value=0, max_value = 1000000)
+        #--
+#        c1, c2 = st.columns(2)
+#        with c1:
+#            st.caption("**CO2 tilført bane 1**")
+#            self.energy_effect_plot(df = df, series = "CO2", series_label = "tonn CO2", separator = True, chart_type = "Bar")
+#        with c2:
+#            st.caption("**Energi tilført bane 2**")
+#            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 2", series_label = "Energi (kWh)", chart_type = "Bar")
+#        with c2:
+#            pass
+        #--
+        c1, c2 = st.columns(2)
         with c1:
             st.caption("**Effekt tilført bane 1**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 1", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400)
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 1", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400)
+#        with c2:
+#            st.caption("**Effekt tilført bane 2**")
+#            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 2", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400)
         with c2:
-            st.caption("**Effekt tilført bane 2**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 2", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400)
-        with c3:
             st.caption("**Effekt levert fra varmepumpe**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400, separator = False)
+            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400, separator = False)
+ 
         c1, c2, c3 = st.columns(3)
         with c1:
             st.caption("**Temperatur ned i 40 brønner**")
@@ -399,16 +423,17 @@ class Dashboard:
         return df
     
     def resolution_picker(self, df):
-        selected_option = st.selectbox("Velg oppløsning", options = ["Rådata", "Timer", "Daglig", "Ukentlig", "Månedlig", "År"])
-        resolution_mapping = {
-            "Rådata" : "Rådata",
-            "Timer" : "H",
-            "Daglig": "D",
-            "Ukentlig": "W",
-            "Månedlig": "M",
-            "År" : "Y"
-        }
-        self.selected_resolution = resolution_mapping[selected_option]
+ #       selected_option = st.selectbox("Velg oppløsning", options = ["Rådata", "Timer", "Daglig", "Ukentlig", "Månedlig", "År"])
+ #       resolution_mapping = {
+ #           "Rådata" : "Rådata",
+ #           "Timer" : "H",
+#            "Daglig": "D",
+#            "Ukentlig": "W",
+#            "Månedlig": "M",
+#            "År" : "Y"
+#        }
+#        self.selected_resolution = resolution_mapping[selected_option]
+        self.selected_resolution = "Rådata"
         if self.selected_resolution != "Rådata":
             numeric_columns = df.select_dtypes(include=[float, int]).columns.tolist()
             df = df.groupby(pd.Grouper(key='Tid', freq=self.selected_resolution, offset='0S'))[numeric_columns].mean().reset_index()
@@ -416,7 +441,7 @@ class Dashboard:
         return df
     
     def select_mode(self):
-        with st.expander("Driftsmodus", expanded = True):
+        with st.expander("Driftsmodus", expanded = False):
             st.selectbox("Velg modus", options = ["", "Modus 1", "Modus 2", "Modus 3", "Modus 4"])
             st.caption("*:blue[Vinter]*")
             st.write("1) :blue[Vi henter varme direkte fra varmelager og leverer til baner]")
@@ -440,12 +465,14 @@ class Dashboard:
             self.streamlit_login_page(name, authentication_status, username, authenticator)
         st.title("Sesongvarmelager KIL Drift") # page title
         df = self.get_full_dataframe() # get dataframe
+        df["CO2"] = df["Tilført energi - Bane 1"] * (238/(1000*1000))
         self.get_electric_df()
         self.get_temperature_series()
         
         df = self.add_columns_to_df(df)
+    
+        df = self.date_picker(df = df) # top level filter
         with st.sidebar:
-            df = self.date_picker(df = df) # top level filter
             df = self.resolution_picker(df = df)
             self.select_mode()
         with st.container():
