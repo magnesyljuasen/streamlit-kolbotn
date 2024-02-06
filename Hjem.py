@@ -352,12 +352,65 @@ class Dashboard:
     ## Åsmund fyll inn her
     def new_charts(self, df):
         st.write("*Her kommer det nye plott..*")
+
         #TODO: Legg inn strømforbruk i df (dette kan skje først i denne funksjonen). Strømforbruk får vi dag for dag mens resten av dataene er time for time. Se src\data\elforbruk\data.xlsx"
+        ##### SE LENGER NED
+
         #TODO: Lag plott med levert energi, utetemperatur og strømforbruk i ett plott
+
+        def energy_el_temp_plot(df, range1, range2, range3):
+            fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.1)
+
+            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Tilført effekt - Bane 1'], mode='lines', name='Tilført energi - Bane 1'), row=1, col=1)
+            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Strømforbruk'], mode='lines', name='Strømforbruk'), row=1, col=1)
+            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['COP'], mode='lines', name='COP'), row=2, col=1)
+            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Utetemperatur'], mode='lines', name='Utetemperatur'), row=3, col=1)
+
+            fig.update_traces(line_color=f"rgba(29, 60, 52, 0.75)", row=1, col=1, selector=dict(name='Tilført energi - Bane 1'))
+            fig.update_traces(line_color=f"rgba(72, 162, 63, 0.75)", row=1, col=1, selector=dict(name='Strømforbruk'))
+            fig.update_traces(line_color=f"rgba(51, 111, 58, 0.75)", row=2, col=1, selector=dict(name='COP'))
+            fig.update_traces(line_color=f"rgba(255, 195, 88, 0.75)", row=3, col=1, selector=dict(name='Utetemperatur'))
+
+            fig.update_xaxes(type='category')
+            fig.update_xaxes(title='', type='category', gridwidth=0.3, tickmode='auto', nticks=4, tickangle=30)
+
+            fig.update_yaxes(title_text="Energi (kWh)", tickformat=" ", range=range1, row=1, col=1)
+            fig.update_yaxes(title_text="COP (-)", range=range2, row=2, col=1)
+            fig.update_yaxes(title_text="Temperatur (ºC)", range=range3, row=3, col=1)
+
+            fig.update_layout(height=700, width=300)
+            fig.update_layout(legend=dict(orientation="h", yanchor="top", y=10), margin=dict(l=20,r=20,b=20,t=20,pad=0))
+            st.plotly_chart(fig, use_container_width=True)
+
+        
         #TODO: Klarer vi å lage det plottet med dag for dag oppløsning også? 
-        #Du kan hente inspirasjon fra default_charts funksjonen under:)
+        
+        numeric_columns = df.select_dtypes(include=[float, int]).columns.tolist()
+        columns_to_sum = [
+            'Energi levert fra varmepumpe', 
+            'Tilført energi - Bane 1', 
+            'Tilført energi - Bane 2', 
+            'CO2', 
+            'Strømforbruk', 
+            'Tilført effekt - Bane 1', 
+            'Tilført effekt - Bane 2', 
+            'Tilført effekt - Varmepumpe'
+            ] # flere kolonner som skal summeres i stedet for å gjennomsnitt-es?
+        aggregations = {col: np.sum if col in columns_to_sum else np.nanmean for col in numeric_columns}
+        df_day = df.groupby(pd.Grouper(key='Tid', freq="D", offset='0S'))[numeric_columns].agg(aggregations).reset_index()
+        df_day["Tidsverdier"] = df_day['Tid'].dt.strftime("%d/%m-%y, %H:01").tolist()
+
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.caption("**Tilført effekt, strømforbruk og utetemperatur, timesoppløsning**")
+            energy_el_temp_plot(df=df, range1=[0,400], range2=[0, 8], range3=[-20, 20])
+        with c2:
+            st.caption("**Tilført effekt, strømforbruk og utetemperatur, dagsoppløsning**")
+            energy_el_temp_plot(df=df_day, range1=[0,8000], range2=[0, 8], range3=[-20, 20])
+        
         st.markdown("---")
-    ## Åsmund fyll inn her
+    ## Slutt på Åsmund fyll inn her
 
     def default_charts(self, df):
         #options = ["Fra bane 1", "Turtemperatur VP (varm side)", "Utetemperatur", "Temperatur ned i 40 brønner", "Temperatur opp fra 40 brønner"]
@@ -440,20 +493,20 @@ class Dashboard:
         return df
     
     def resolution_picker(self, df):
- #       selected_option = st.selectbox("Velg oppløsning", options = ["Rådata", "Timer", "Daglig", "Ukentlig", "Månedlig", "År"])
- #       resolution_mapping = {
- #           "Rådata" : "Rådata",
- #           "Timer" : "H",
-#            "Daglig": "D",
-#            "Ukentlig": "W",
-#            "Månedlig": "M",
-#            "År" : "Y"
-#        }
-#        self.selected_resolution = resolution_mapping[selected_option]
-        self.selected_resolution = "Rådata"
+        selected_option = st.selectbox("Velg oppløsning", options = ["Rådata", "Timer", "Daglig", "Ukentlig", "Månedlig", "År"])
+        resolution_mapping = {
+           "Rådata" : "Rådata",
+           "Timer" : "H",
+            "Daglig": "D",
+            "Ukentlig": "W",
+            "Månedlig": "M",
+            "År" : "Y"
+        }
+        self.selected_resolution = resolution_mapping[selected_option]
+        #self.selected_resolution = "Rådata"
         if self.selected_resolution != "Rådata":
             numeric_columns = df.select_dtypes(include=[float, int]).columns.tolist()
-            df = df.groupby(pd.Grouper(key='Tid', freq=self.selected_resolution, offset='0S'))[numeric_columns].mean().reset_index()
+            df = df.groupby(pd.Grouper(key='Tid', freq="D", offset='0S'))[numeric_columns].mean().reset_index()
         df["Tidsverdier"] = df['Tid'].dt.strftime("%d/%m-%y, %H:01").tolist()
         return df
     
@@ -483,11 +536,44 @@ class Dashboard:
         st.title("Sesongvarmelager KIL Drift") # page title
         df = self.get_full_dataframe() # get dataframe
         df["CO2"] = df["Tilført energi - Bane 1"] * (238/(1000*1000))
+        
         self.get_electric_df()
         self.get_temperature_series()
+
+        ####### Åsmund har lagt til strømforbruk i df her: ##############
+        df_el = self.df_el
+        date_format = "%d/%m-%y, %H:%M"
+        df_el['Tidsverdier'] = pd.to_datetime(df_el['Tidsverdier'], format=date_format)
+
+        df['Strømforbruk'] = ''
+
+        start = df['Tid'].iloc[0]
+        end = df['Tid'].iloc[-1]
+        res_date = start
+
+        while res_date <= end:
+            indexes_this_day = df.index[df['Tid'].dt.date == res_date.date()]
+            el_this_day = df_el[df_el['Tidsverdier'].dt.date == res_date.date()]
+            try:
+                el_this_day = el_this_day['kWh'].iloc[0]
+                el_per_h = float(el_this_day)/24
+            except:
+                el_per_h = float('NaN')
+            
+            for j in indexes_this_day:  
+                df.at[j, 'Strømforbruk'] = el_per_h
+            res_date += datetime.timedelta(days=1)
+        
+        df['Strømforbruk'] = df['Strømforbruk'].astype(float)
+
+
+        ############################################################
         
         df = self.add_columns_to_df(df)
     
+        df['COP'] = df['Tilført effekt - Bane 1']/df['Strømforbruk']
+        df['COP'].astype(float)
+
         df = self.date_picker(df = df) # top level filter
         with st.sidebar:
             df = self.resolution_picker(df = df)
