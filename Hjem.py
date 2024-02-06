@@ -7,6 +7,8 @@ import pymongo
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 import yaml
 import base64
 from PIL import Image
@@ -66,7 +68,7 @@ class Dashboard:
         df.replace('', np.nan, inplace=True)
         df.replace(' ', np.nan, inplace=True)
         df = df.dropna(how='all')
-        df = df.dropna(axis = 1)
+        df = df.dropna(axis = 1, thresh=1)
         return df
 
     def get_names(self, df, substring):
@@ -75,7 +77,7 @@ class Dashboard:
         elif substring == "TREND2":
             column_names = ["ID", "Date", "Time", "3501-RT503", "3201-RT401", "3201-RT501", "3501-RT401", "3501-RT504", "3501-RT001", "3501-RT002", "3501-RP001", "3501-RP002", "BC-RN001"]
         elif substring == "TREND3":
-            column_names = ["ID", "Date", "Time", "3201-OE501", "3202-OE501", "3203-OE501"]
+            column_names = ["ID", "Date", "Time", "3201-OE501", "3202-OE501", "3203-OE501", "Utetemperatur"]
         df.columns = column_names
         return df
 
@@ -347,7 +349,20 @@ class Dashboard:
 #            delta = self.column_to_delta(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
 #        )
 
+    ## Åsmund fyll inn her
+    def new_charts(self, df):
+        st.write("*Her kommer det nye plott..*")
+        #TODO: Legg inn strømforbruk i df (dette kan skje først i denne funksjonen). Strømforbruk får vi dag for dag mens resten av dataene er time for time. Se src\data\elforbruk\data.xlsx"
+        #TODO: Lag plott med levert energi, utetemperatur og strømforbruk i ett plott
+        #TODO: Klarer vi å lage det plottet med dag for dag oppløsning også? 
+        st.markdown("---")
+    ## Åsmund fyll inn her
+
     def default_charts(self, df):
+        #options = ["Fra bane 1", "Turtemperatur VP (varm side)", "Utetemperatur", "Temperatur ned i 40 brønner", "Temperatur opp fra 40 brønner"]
+        #columns = st.multiselect("velg", options = options)
+        #new_df = df[columns]
+        #st.line_chart(new_df)
         c1, c2 = st.columns(2)
         with c1:
             st.caption("**Temperatur fra bane 1**")
@@ -405,6 +420,7 @@ class Dashboard:
         self.energy_effect_plot(df = self.df_el, series = "kWh", series_label = "Strøm (kWh)", separator = True, chart_type = "Bar")
         st.caption("**Utetemperatur fra nærmeste værstasjon**")
         self.energy_effect_plot(df = self.df_temperature, series = "Temperatur", series_label = "Utetemperatur", separator = True, chart_type = "Line")
+        self.energy_effect_plot(df = df, series = "Utetemperatur", series_label = "Energi (kWh)", separator = True, chart_type = "Line")   
 
     def show_weather_stats(self):
         c1, c2 = st.columns(2)
@@ -478,7 +494,14 @@ class Dashboard:
         with st.container():
             self.default_kpi(df = df) # kpis
         with st.container():
+            ############# Åsmund
+            self.new_charts(df = df)
+            ############# Åsmund
+
+            ############# Original
             self.default_charts(df = df)
+            ############# Original
+
         st.dataframe(
             data = df, 
             height = 300, 
