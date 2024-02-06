@@ -355,6 +355,7 @@ class Dashboard:
         #TODO: Legg inn strømforbruk i df (dette kan skje først i denne funksjonen). Strømforbruk får vi dag for dag mens resten av dataene er time for time. Se src\data\elforbruk\data.xlsx"
         #TODO: Lag plott med levert energi, utetemperatur og strømforbruk i ett plott
         #TODO: Klarer vi å lage det plottet med dag for dag oppløsning også? 
+        #Du kan hente inspirasjon fra default_charts funksjonen under:)
         st.markdown("---")
     ## Åsmund fyll inn her
 
