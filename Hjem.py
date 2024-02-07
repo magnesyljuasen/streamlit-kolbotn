@@ -309,66 +309,86 @@ class Dashboard:
             })
     
     def default_kpi(self, df):
-#        if (self.selected_resolution == "H") or (self.selected_resolution == "Rådata"): 
-#            last_value = -23
-#            last_value_text = "døgn"
-#        elif (self.selected_resolution == "D"):
-#            last_value = -2
-#            last_value_text = "døgn"
-#        elif (self.selected_resolution == "W"):
-#            last_value = -2
-#            last_value_text = "uke"
-#        elif (self.selected_resolution == "M"):
-#            last_value = -2
-#            last_value_text = "måned"
-#        elif (self.selected_resolution == "Y"):
-#            last_value = -2
-#            last_value_text = "år"
-        
         days = len(df)/23
-        kpi1, kpi2 = st.columns(2)
         value_1 = round(int(df['Tilført effekt - Bane 1'].sum()), -2)
-        kpi1.metric(
-            label = "Energi til bane 1 **i valgt tidsintervall**",
-            value = f"{value_1:,} kWh".replace(",", " "),
-            delta = f"{round(value_1/days):,} kWh/dag".replace(",", " "),
-            help="Dette er energi tilført bane 1 i tidsintervallet."
-            )
-        value_2 = round(int(df["Tilført energi - Bane 1"].to_numpy()[-1]), -2)
-        kpi2.metric(
-            label = "Energi til bane 1 **frem til siste dato i tidsintervall**",
-            value = f"{value_2:,} kWh".replace(",", " "),
-            delta = f"{round(value_2/days):,} kWh/dag".replace(",", " "),
-            help="Dette er energi tilført bane 1 frem til siste dato valgt i tidsintervallet."
-        )
-        kpi1, kpi2 = st.columns(2)
         value_3 = round(int(df['Strømforbruk'].sum()), -2)
-        kpi1.metric(
-            label = "Strømforbruk **i valgt tidsintervall**",
-            value = f"{value_3:,} kWh".replace(",", " "),
-            delta = f"{round(value_3/days):,} kWh/dag".replace(",", " "),
-            help="Dette er strømforbruk i tidsintervallet."
-            )
+        value_2 = round(int(self.total_energyuse), -2)
         value_4 = round(int(self.total_poweruse), -2)
-        kpi2.metric(
-            label = "Strømforbruk **frem til siste dato i tidsintervall**",
-            value = f"{value_4:,} kWh".replace(",", " "),
-            delta = f"{round(value_4/days):,} kWh/dag".replace(",", " "),
-            help="Dette er strømforbruk frem til siste dato valgt i tidsintervallet."
-        )
-        kpi1, kpi2 = st.columns(2)
-        value_5 = round(value_1/value_3, 1)
-        kpi1.metric(
-            label = "COP **i valgt tidsintervall**",
-            value = f"{value_5:,}".replace(",", " "),
-            help="COP"
+        unit = "kWh"
+
+        tab1, tab2 = st.tabs(["I valgt tidsintervall", "Totalt"])
+        with tab1:
+            #####
+            kpi1, kpi2 = st.columns(2)
+            kpi1.metric(
+                label = "Energi til bane 1 **i valgt tidsintervall**",
+                value = f"{value_1:,} {unit}".replace(",", " "),
+                delta = f"{round(value_1/days):,} {unit} per dag".replace(",", " "),
+                help="Dette er energi tilført bane 1 i tidsintervallet."
+                )
+            #####
+            kpi1.metric(
+                label = "Strømforbruk **i valgt tidsintervall**",
+                value = f"{value_3:,} {unit}".replace(",", " "),
+                delta = f"{round(value_3/days):,} {unit} per dag".replace(",", " "),
+                help="Dette er strømforbruk i tidsintervallet."
+                )
+            #####
+            value_diff_1 = value_1 - value_3
+            kpi2.metric(
+                label = "Besparelse **i valgt tidsintervall**",
+                value = f"{value_diff_1:,} {unit}".replace(",", " "),
+                delta = f"{round(value_diff_1/days):,} {unit} per dag".replace(",", " "),
+                help="Dette er besparelsen i tidsintervallet."
+                )
+            #####   
+            value_5 = round(value_1/value_3, 1)
+            kpi2.metric(
+                label = "Gjennomsnittlig COP **i valgt tidsintervall**",
+                value = f"{value_5:,}".replace(".", ","),
+                help="""Koeffisienten for ytelse (COP) er et viktig begrep innenfor 
+                termodynamikk og energieffektivitet, spesielt for varmepumper og 
+                kjølesystemer. COP måler hvor effektivt et system kan produsere 
+                ønsket termisk effekt (som oppvarming eller nedkjøling) i forhold til 
+                energien som brukes til å drive systemet."""
+                )
+            #####
+        with tab2:
+            #####
+            kpi1, kpi2 = st.columns(2)
+            kpi1.metric(
+                label = "Energi til bane 1 (**totalt**)",
+                value = f"{value_2:,} kWh".replace(",", " "),
+                delta = f"{round(value_2/self.total_days):,} kWh per dag".replace(",", " "),
+                help="Totalt tilført energi bane 1."
             )
-        value_6 = round(value_2/value_4, 1)
-        kpi2.metric(
-            label = "COP **frem til siste dato i tidsintervall**",
-            value = f"{value_6:,}".replace(",", " "),
-            help="COP"
-        )
+            #####
+            kpi1.metric(
+                label = "Strømforbruk (**totalt**)",
+                value = f"{value_4:,} kWh".replace(",", " "),
+                delta = f"{round(value_4/self.total_days):,} kWh per dag".replace(",", " "),
+                help="Totalt strømforbruk."
+            )
+            #####
+            value_diff_2 = value_2 - value_4
+            kpi2.metric(
+                label = "Besparelse (**totalt**)",
+                value = f"{value_diff_2:,} kWh".replace(",", " "),
+                delta = f"{round(value_diff_2/self.total_days):,} kWh per dag".replace(",", " "),
+                help="Total besparelse."
+            )
+            #####
+            value_6 = round(value_2/value_4, 1)
+            kpi2.metric(
+                label = "Gjennomsnittlig COP (**totalt**)",
+                value = f"{value_6:,}".replace(".", ","),
+                help= 
+                """ Koeffisienten for ytelse (COP) er et viktig begrep innenfor 
+                termodynamikk og energieffektivitet, spesielt for varmepumper og 
+                kjølesystemer. COP måler hvor effektivt et system kan produsere 
+                ønsket termisk effekt (som oppvarming eller nedkjøling) i forhold til 
+                energien som brukes til å drive systemet. """
+            )
 
 #        kpi2.metric(
 #            label = "Energi tilført bane 2 ",
@@ -383,25 +403,25 @@ class Dashboard:
 
     ## Åsmund fyll inn her
     def new_charts(self, df):
-        def subplot(df, range1, range2, range3):
+        def subplot(df, y_label, y_label_temperature = "Temperatur (ºC)"):
             fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.1, row_heights=[0.2, 0.1, 0.1])
 
             fig.add_trace(go.Bar(x=df['Tidsverdier'], y=df['Tilført effekt - Bane 1'], name='Tilført energi - Bane 1'), row=1, col=1)
             fig.add_trace(go.Bar(x=df['Tidsverdier'], y=df['Strømforbruk'], name='Strømforbruk'), row=1, col=1)
             fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['COP'], mode='markers', name='COP'), row=2, col=1)
-            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Utetemperatur'], mode='lines', name='Utetemperatur'), row=3, col=1)
+            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Utetemperatur'], mode='lines+markers', name='Utetemperatur'), row=3, col=1)
 
             fig.update_traces(marker_color=f"rgba(29, 60, 52, 0.75)", row=1, col=1, selector=dict(name='Tilført energi - Bane 1'))
             fig.update_traces(marker_color=f"rgba(72, 162, 63, 0.75)", row=1, col=1, selector=dict(name='Strømforbruk'))
             fig.update_traces(marker=dict(color=f"rgba(51, 111, 58, 0.75)", size=5), row=2, col=1, selector=dict(name='COP'))
-            fig.update_traces(line_color=f"rgba(255, 195, 88, 0.75)", row=3, col=1, selector=dict(name='Utetemperatur'))
+            fig.update_traces(line_color=f"rgba(255, 195, 88, 0.75)",row=3, col=1, selector=dict(name='Utetemperatur'))
 
             fig.update_xaxes(type='category')
             fig.update_xaxes(title='', type='category', gridwidth=0.3, tickmode='auto', nticks=4, tickangle=30)
 
-            fig.update_yaxes(title_text="Energi (kWh)", tickformat=" ", range=range1, row=1, col=1)
-            fig.update_yaxes(title_text="COP", range=range2, row=2, col=1)
-            fig.update_yaxes(title_text="Temperatur (ºC)", row=3, col=1)
+            fig.update_yaxes(title_text=y_label, tickformat=" ", row=1, col=1)
+            fig.update_yaxes(title_text="COP", row=2, col=1)
+            fig.update_yaxes(title_text=y_label_temperature, row=3, col=1)
 
             fig.update_layout(height=600, width=300)
             fig.update_layout(legend=dict(orientation="h", yanchor="top", y=10), margin=dict(l=20,r=20,b=20,t=20,pad=0))
@@ -422,13 +442,22 @@ class Dashboard:
         df_day = df.groupby(pd.Grouper(key='Tid', freq="D", offset='0S'))[numeric_columns].agg(aggregations).reset_index()
         df_day["Tidsverdier"] = df_day['Tid'].dt.strftime("%d/%m-%y, %H:01").tolist()
 
-        tab1, tab2 = st.tabs(["Timesoppløsning", "Dagsoppløsning"])
+        df_week = df.groupby(pd.Grouper(key='Tid', freq="W", offset='0S'))[numeric_columns].agg(aggregations).reset_index()
+        df_week["Tidsverdier"] = df_week['Tid'].dt.strftime("%d/%m-%y, %H:01").tolist()
+
+        tab1, tab2, tab3 = st.tabs(["Timesoppløsning", "Dagsoppløsning", "Ukesoppløsning"])
         with tab1:
             st.caption("**Sammenstilling (energi per time, strømforbruk og utetemperatur)**")
-            subplot(df=df, range1=[0,400], range2=[0, 8], range3=[-20, 20])
+            subplot(df=df, y_label = "Timesmidlet effekt (kWh/h)")
         with tab2:
             st.caption("**Sammenstilling (energi per dag, strømforbruk og utetemperatur)**")
-            subplot(df=df_day, range1=[0,8000], range2=[0, 8], range3=[-20, 20])
+            subplot(df=df_day, y_label = "Energi (kWh)", y_label_temperature = "Gj.snittlig temperatur (ºC)")
+        with tab3:
+            if len(df)/23 >= 6:
+                st.caption("**Sammenstilling (energi per uke, strømforbruk og utetemperatur)**")
+                subplot(df=df_week, y_label = "Energi (kWh)", y_label_temperature = "Gj.snittlig temperatur (ºC)")
+            else:
+                st.warning("Det er valgt færre enn 7 dager (1 uke) i tidsintervallet.")
         
         st.markdown("---")
     ## Slutt på Åsmund fyll inn her
@@ -548,6 +577,15 @@ class Dashboard:
         df_el['Tidsverdier'] = df_el['dato'].dt.strftime('%d/%m-%y, %H:%M')
         self.df_el = df_el
 
+    def remove_outliers(self, df, series):
+        Q1 = df[series].quantile(0.1)
+        Q3 = df[series].quantile(0.9)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        df.loc[(df[series] < lower_bound) | (df[series] > upper_bound), series] = np.nan
+        return df
+
     def main(self):
         self.streamlit_settings()
         c1, c2, c3 = st.columns([1,2,1])
@@ -587,6 +625,13 @@ class Dashboard:
         df['Strømforbruk'] = df['Strømforbruk'].round()
         df['Strømforbruk_akkumulert'] = df['Strømforbruk'].cumsum()
         self.total_poweruse = df['Strømforbruk_akkumulert'].max()
+        self.total_energyuse = df['Tilført energi - Bane 1'].max()
+        self.total_days = len(df)/23
+        ####
+        df = self.remove_outliers(df, "Tilført effekt - Bane 1")
+        df = self.remove_outliers(df, "Tilført energi - Bane 1")
+        df = self.remove_outliers(df, "COP")
+        ####
         df = self.date_picker(df = df) # top level filter
             
         with st.sidebar:
