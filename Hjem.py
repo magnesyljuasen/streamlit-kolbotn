@@ -323,14 +323,14 @@ class Dashboard:
             kpi1.metric(
                 label = "Energi til bane 1 **i valgt tidsintervall**",
                 value = f"{value_1:,} {unit}".replace(",", " "),
-                delta = f"{round(value_1/days):,} {unit} per dag".replace(",", " "),
+                #delta = f"{round(value_1/days):,} {unit} per dag".replace(",", " "),
                 help="Dette er energi tilført bane 1 i tidsintervallet."
                 )
             #####
             kpi1.metric(
                 label = "Strømforbruk **i valgt tidsintervall**",
                 value = f"{value_3:,} {unit}".replace(",", " "),
-                delta = f"{round(value_3/days):,} {unit} per dag".replace(",", " "),
+                #delta = f"{round(value_3/days):,} {unit} per dag".replace(",", " "),
                 help="Dette er strømforbruk i tidsintervallet."
                 )
             #####
@@ -338,7 +338,7 @@ class Dashboard:
             kpi2.metric(
                 label = "Besparelse **i valgt tidsintervall**",
                 value = f"{value_diff_1:,} {unit}".replace(",", " "),
-                delta = f"{round(value_diff_1/days):,} {unit} per dag".replace(",", " "),
+                #delta = f"{round(value_diff_1/days):,} {unit} per dag".replace(",", " "),
                 help="Dette er besparelsen i tidsintervallet."
                 )
             #####   
@@ -359,14 +359,14 @@ class Dashboard:
             kpi1.metric(
                 label = "Energi til bane 1 (**totalt**)",
                 value = f"{value_2:,} kWh".replace(",", " "),
-                delta = f"{round(value_2/self.total_days):,} kWh per dag".replace(",", " "),
+                #delta = f"{round(value_2/self.total_days):,} kWh per dag".replace(",", " "),
                 help="Totalt tilført energi bane 1."
             )
             #####
             kpi1.metric(
                 label = "Strømforbruk (**totalt**)",
                 value = f"{value_4:,} kWh".replace(",", " "),
-                delta = f"{round(value_4/self.total_days):,} kWh per dag".replace(",", " "),
+                #delta = f"{round(value_4/self.total_days):,} kWh per dag".replace(",", " "),
                 help="Totalt strømforbruk."
             )
             #####
@@ -374,7 +374,7 @@ class Dashboard:
             kpi2.metric(
                 label = "Besparelse (**totalt**)",
                 value = f"{value_diff_2:,} kWh".replace(",", " "),
-                delta = f"{round(value_diff_2/self.total_days):,} kWh per dag".replace(",", " "),
+                #delta = f"{round(value_diff_2/self.total_days):,} kWh per dag".replace(",", " "),
                 help="Total besparelse."
             )
             #####
