@@ -262,7 +262,7 @@ class Dashboard:
     def date_picker(self, df):
         st.info(
             """ Velg tidsintervall her 
-            for å filtere dataene. Alle Tall og grafer vil oppdatere seg. Her er det mulig å se verdier for en måned ved å filtrere for f.eks. 1. desember til 31. desember.
+            for å filtere dataene. Alle tall og grafer vil oppdatere seg. Her er det mulig å se verdier for en måned ved å filtrere for f.eks. 1. desember til 31. desember.
             """, icon="ℹ️")
         date_range = st.date_input("Velg tidsintervall", (df["Tid"][0].to_pydatetime(), df["Tid"][len(df["Tid"]) - 1].to_pydatetime()))
         if len(date_range) == 1:
@@ -309,81 +309,103 @@ class Dashboard:
             })
     
     def default_kpi(self, df):
-        if (self.selected_resolution == "H") or (self.selected_resolution == "Rådata"): 
-            last_value = -23
-            last_value_text = "døgn"
-        elif (self.selected_resolution == "D"):
-            last_value = -2
-            last_value_text = "døgn"
-        elif (self.selected_resolution == "W"):
-            last_value = -2
-            last_value_text = "uke"
-        elif (self.selected_resolution == "M"):
-            last_value = -2
-            last_value_text = "måned"
-        elif (self.selected_resolution == "Y"):
-            last_value = -2
-            last_value_text = "år"
+#        if (self.selected_resolution == "H") or (self.selected_resolution == "Rådata"): 
+#            last_value = -23
+#            last_value_text = "døgn"
+#        elif (self.selected_resolution == "D"):
+#            last_value = -2
+#            last_value_text = "døgn"
+#        elif (self.selected_resolution == "W"):
+#            last_value = -2
+#            last_value_text = "uke"
+#        elif (self.selected_resolution == "M"):
+#            last_value = -2
+#            last_value_text = "måned"
+#        elif (self.selected_resolution == "Y"):
+#            last_value = -2
+#            last_value_text = "år"
         
+        days = len(df)/23
         kpi1, kpi2 = st.columns(2)
+        value_1 = round(int(df['Tilført effekt - Bane 1'].sum()), -2)
         kpi1.metric(
-            label = "Energi tilført bane 1 (gjeldende tidsintervall)",
-            value = f"{round(int(df['Tilført effekt - Bane 1'].sum()), -2):,} kWh".replace(",", " "),
+            label = "Energi til bane 1 **i valgt tidsintervall**",
+            value = f"{value_1:,} kWh".replace(",", " "),
+            delta = f"{round(value_1/days):,} kWh/dag".replace(",", " "),
             help="Dette er energi tilført bane 1 i tidsintervallet."
             )
-
+        value_2 = round(int(df["Tilført energi - Bane 1"].to_numpy()[-1]), -2)
         kpi2.metric(
-            label = "Energi tilført bane 1 (frem til siste dato i tidsintervall)",
-            value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 1", unit = "kWh"),
+            label = "Energi til bane 1 **frem til siste dato i tidsintervall**",
+            value = f"{value_2:,} kWh".replace(",", " "),
+            delta = f"{round(value_2/days):,} kWh/dag".replace(",", " "),
             help="Dette er energi tilført bane 1 frem til siste dato valgt i tidsintervallet."
         )
-        st.markdown("---")
+        kpi1, kpi2 = st.columns(2)
+        value_3 = round(int(df['Strømforbruk'].sum()), -2)
+        kpi1.metric(
+            label = "Strømforbruk **i valgt tidsintervall**",
+            value = f"{value_3:,} kWh".replace(",", " "),
+            delta = f"{round(value_3/days):,} kWh/dag".replace(",", " "),
+            help="Dette er strømforbruk i tidsintervallet."
+            )
+        value_4 = round(int(self.total_poweruse), -2)
+        kpi2.metric(
+            label = "Strømforbruk **frem til siste dato i tidsintervall**",
+            value = f"{value_4:,} kWh".replace(",", " "),
+            delta = f"{round(value_4/days):,} kWh/dag".replace(",", " "),
+            help="Dette er strømforbruk frem til siste dato valgt i tidsintervallet."
+        )
+        kpi1, kpi2 = st.columns(2)
+        value_5 = round(value_1/value_3, 1)
+        kpi1.metric(
+            label = "COP **i valgt tidsintervall**",
+            value = f"{value_5:,}".replace(",", " "),
+            help="COP"
+            )
+        value_6 = round(value_2/value_4, 1)
+        kpi2.metric(
+            label = "COP **frem til siste dato i tidsintervall**",
+            value = f"{value_6:,}".replace(",", " "),
+            help="COP"
+        )
+
 #        kpi2.metric(
-#            label = "Energi tilført bane 2 (totalt)",
+#            label = "Energi tilført bane 2 ",
 #            value = self.column_to_metric(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh"),
 #            delta = self.column_to_delta(df = df, metric_name = "Tilført energi - Bane 2", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
 #        )
 #        kpi3.metric(
-#            label="Energi levert fra varmepumpe (totalt)",
+#            label="Energi levert fra varmepumpe ",
 #            value = self.column_to_metric(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh"),
 #            delta = self.column_to_delta(df = df, metric_name = "Energi levert fra varmepumpe", unit = "kWh", last_value = last_value, last_value_text = last_value_text)
 #        )
 
     ## Åsmund fyll inn her
     def new_charts(self, df):
-        st.write("*Her kommer det nye plott..*")
+        def subplot(df, range1, range2, range3):
+            fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.1, row_heights=[0.2, 0.1, 0.1])
 
-        #TODO: Legg inn strømforbruk i df (dette kan skje først i denne funksjonen). Strømforbruk får vi dag for dag mens resten av dataene er time for time. Se src\data\elforbruk\data.xlsx"
-        ##### SE LENGER NED
-
-        #TODO: Lag plott med levert energi, utetemperatur og strømforbruk i ett plott
-
-        def energy_el_temp_plot(df, range1, range2, range3):
-            fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.1)
-
-            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Tilført effekt - Bane 1'], mode='lines', name='Tilført energi - Bane 1'), row=1, col=1)
-            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Strømforbruk'], mode='lines', name='Strømforbruk'), row=1, col=1)
-            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['COP'], mode='lines', name='COP'), row=2, col=1)
+            fig.add_trace(go.Bar(x=df['Tidsverdier'], y=df['Tilført effekt - Bane 1'], name='Tilført energi - Bane 1'), row=1, col=1)
+            fig.add_trace(go.Bar(x=df['Tidsverdier'], y=df['Strømforbruk'], name='Strømforbruk'), row=1, col=1)
+            fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['COP'], mode='markers', name='COP'), row=2, col=1)
             fig.add_trace(go.Scatter(x=df['Tidsverdier'], y=df['Utetemperatur'], mode='lines', name='Utetemperatur'), row=3, col=1)
 
-            fig.update_traces(line_color=f"rgba(29, 60, 52, 0.75)", row=1, col=1, selector=dict(name='Tilført energi - Bane 1'))
-            fig.update_traces(line_color=f"rgba(72, 162, 63, 0.75)", row=1, col=1, selector=dict(name='Strømforbruk'))
-            fig.update_traces(line_color=f"rgba(51, 111, 58, 0.75)", row=2, col=1, selector=dict(name='COP'))
+            fig.update_traces(marker_color=f"rgba(29, 60, 52, 0.75)", row=1, col=1, selector=dict(name='Tilført energi - Bane 1'))
+            fig.update_traces(marker_color=f"rgba(72, 162, 63, 0.75)", row=1, col=1, selector=dict(name='Strømforbruk'))
+            fig.update_traces(marker=dict(color=f"rgba(51, 111, 58, 0.75)", size=5), row=2, col=1, selector=dict(name='COP'))
             fig.update_traces(line_color=f"rgba(255, 195, 88, 0.75)", row=3, col=1, selector=dict(name='Utetemperatur'))
 
             fig.update_xaxes(type='category')
             fig.update_xaxes(title='', type='category', gridwidth=0.3, tickmode='auto', nticks=4, tickangle=30)
 
             fig.update_yaxes(title_text="Energi (kWh)", tickformat=" ", range=range1, row=1, col=1)
-            fig.update_yaxes(title_text="COP (-)", range=range2, row=2, col=1)
-            fig.update_yaxes(title_text="Temperatur (ºC)", range=range3, row=3, col=1)
+            fig.update_yaxes(title_text="COP", range=range2, row=2, col=1)
+            fig.update_yaxes(title_text="Temperatur (ºC)", row=3, col=1)
 
-            fig.update_layout(height=700, width=300)
+            fig.update_layout(height=600, width=300)
             fig.update_layout(legend=dict(orientation="h", yanchor="top", y=10), margin=dict(l=20,r=20,b=20,t=20,pad=0))
-            st.plotly_chart(fig, use_container_width=True)
-
-        
-        #TODO: Klarer vi å lage det plottet med dag for dag oppløsning også? 
+            st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
         
         numeric_columns = df.select_dtypes(include=[float, int]).columns.tolist()
         columns_to_sum = [
@@ -400,14 +422,13 @@ class Dashboard:
         df_day = df.groupby(pd.Grouper(key='Tid', freq="D", offset='0S'))[numeric_columns].agg(aggregations).reset_index()
         df_day["Tidsverdier"] = df_day['Tid'].dt.strftime("%d/%m-%y, %H:01").tolist()
 
-
-        c1, c2 = st.columns(2)
-        with c1:
-            st.caption("**Tilført effekt, strømforbruk og utetemperatur, timesoppløsning**")
-            energy_el_temp_plot(df=df, range1=[0,400], range2=[0, 8], range3=[-20, 20])
-        with c2:
-            st.caption("**Tilført effekt, strømforbruk og utetemperatur, dagsoppløsning**")
-            energy_el_temp_plot(df=df_day, range1=[0,8000], range2=[0, 8], range3=[-20, 20])
+        tab1, tab2 = st.tabs(["Timesoppløsning", "Dagsoppløsning"])
+        with tab1:
+            st.caption("**Sammenstilling (energi per time, strømforbruk og utetemperatur)**")
+            subplot(df=df, range1=[0,400], range2=[0, 8], range3=[-20, 20])
+        with tab2:
+            st.caption("**Sammenstilling (energi per dag, strømforbruk og utetemperatur)**")
+            subplot(df=df_day, range1=[0,8000], range2=[0, 8], range3=[-20, 20])
         
         st.markdown("---")
     ## Slutt på Åsmund fyll inn her
@@ -429,14 +450,24 @@ class Dashboard:
             self.temperature_plot(df = df, series = 'Turtemperatur VP (varm side)', min_value = 10, max_value = 40)
         c1, c2 = st.columns(2)
         with c1:
-            st.caption("**Energi tilført bane 1**")
+            st.caption("**Temperatur ned i 40 brønner**")
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur ned i 40 brønner', series_2 = 'Temperatur ned i 20 brønner', min_value = -5, max_value = 15)
+        with c2:
+            st.caption("**Temperatur opp fra 20 og 40 brønner**")
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur opp fra 40 brønner', series_2 = 'Temperatur opp fra 20 brønner', min_value = -5, max_value = 15)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.caption("**Temperaturføler i brønn (ytre og midten)**")
+            self.temperature_plot_two_series(df = df, series_1 = 'Temperaturføler i brønn (ytre)', series_2 = 'Temperaturføler i brønn (midten)', min_value = -5, max_value = 15)
+        with c2:
+            st.caption("**Energi tilført bane 1 (akkumulert)**")
             self.energy_effect_plot(df = df, series = "Tilført energi - Bane 1", series_label = "Energi (kWh)", separator = True, chart_type = "Bar", min_value=0, max_value = 400000)
 #        with c2:
 #            st.caption("**Energi tilført bane 2**")
 #            self.energy_effect_plot(df = df, series = "Tilført energi - Bane 2", series_label = "Energi (kWh)", chart_type = "Bar")
-        with c2:
-            st.caption("**Energi levert fra varmepumpe**")
-            self.energy_effect_plot(df = df, series = "Energi levert fra varmepumpe", series_label = "Energi (kWh)", separator = True, chart_type = "Bar", min_value=0, max_value = 1000000)
+#        with c2:
+#            st.caption("**Energi levert fra varmepumpe (akkumulert)**")
+#            self.energy_effect_plot(df = df, series = "Energi levert fra varmepumpe", series_label = "Energi (kWh)", separator = True, chart_type = "Bar", min_value=0, max_value = 1000000)
         #--
 #        c1, c2 = st.columns(2)
 #        with c1:
@@ -448,33 +479,23 @@ class Dashboard:
 #        with c2:
 #            pass
         #--
-        c1, c2 = st.columns(2)
-        with c1:
-            st.caption("**Effekt tilført bane 1**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 1", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400)
+#        c1, c2 = st.columns(2)
+#        with c1:
+#            st.caption("**Effekt tilført bane 1**")
+#            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 1", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400)
 #        with c2:
 #            st.caption("**Effekt tilført bane 2**")
 #            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 2", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400)
-        with c2:
-            st.caption("**Effekt levert fra varmepumpe**")
-            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400, separator = False)
+#        with c2:
+#            st.caption("**Effekt levert fra varmepumpe**")
+#            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400, separator = False)
  
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.caption("**Temperatur ned i 40 brønner**")
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur ned i 40 brønner', series_2 = 'Temperatur ned i 20 brønner', min_value = -5, max_value = 15)
-        with c2:
-            st.caption("**Temperatur opp fra 20 og 40 brønner**")
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperatur opp fra 40 brønner', series_2 = 'Temperatur opp fra 20 brønner', min_value = -5, max_value = 15)
-        with c3:
-            st.caption("**Temperaturføler i brønn (ytre og midten)**")
-            self.temperature_plot_two_series(df = df, series_1 = 'Temperaturføler i brønn (ytre)', series_2 = 'Temperaturføler i brønn (midten)', min_value = -5, max_value = 15)
         st.markdown("---")
         st.caption("**Strømforbruk**")
         self.energy_effect_plot(df = self.df_el, series = "kWh", series_label = "Strøm (kWh)", separator = True, chart_type = "Bar")
-        st.caption("**Utetemperatur fra nærmeste værstasjon**")
-        self.energy_effect_plot(df = self.df_temperature, series = "Temperatur", series_label = "Utetemperatur", separator = True, chart_type = "Line")
-        self.energy_effect_plot(df = df, series = "Utetemperatur", series_label = "Energi (kWh)", separator = True, chart_type = "Line")   
+#        st.caption("**Utetemperatur fra nærmeste værstasjon**")
+#        self.energy_effect_plot(df = self.df_temperature, series = "Temperatur", series_label = "Utetemperatur", separator = True, chart_type = "Line")
+#        self.energy_effect_plot(df = df, series = "Utetemperatur", series_label = "Energi (kWh)", separator = True, chart_type = "Line")   
 
     def show_weather_stats(self):
         c1, c2 = st.columns(2)
@@ -535,22 +556,16 @@ class Dashboard:
             self.streamlit_login_page(name, authentication_status, username, authenticator)
         st.title("Sesongvarmelager KIL Drift") # page title
         df = self.get_full_dataframe() # get dataframe
-        df["CO2"] = df["Tilført energi - Bane 1"] * (238/(1000*1000))
+        #df["CO2"] = df["Tilført energi - Bane 1"] * (238/(1000*1000))
         
         self.get_electric_df()
         self.get_temperature_series()
 
-        ####### Åsmund har lagt til strømforbruk i df her: ##############
-        df_el = self.df_el
-        date_format = "%d/%m-%y, %H:%M"
-        df_el['Tidsverdier'] = pd.to_datetime(df_el['Tidsverdier'], format=date_format)
-
-        df['Strømforbruk'] = ''
-
+        df_el = self.df_el 
+        df_el['Tidsverdier'] = pd.to_datetime(df_el['Tidsverdier'], format="%d/%m-%y, %H:%M")
         start = df['Tid'].iloc[0]
         end = df['Tid'].iloc[-1]
         res_date = start
-
         while res_date <= end:
             indexes_this_day = df.index[df['Tid'].dt.date == res_date.date()]
             el_this_day = df_el[df_el['Tidsverdier'].dt.date == res_date.date()]
@@ -559,24 +574,23 @@ class Dashboard:
                 el_per_h = float(el_this_day)/24
             except:
                 el_per_h = float('NaN')
-            
             for j in indexes_this_day:  
                 df.at[j, 'Strømforbruk'] = el_per_h
             res_date += datetime.timedelta(days=1)
-        
         df['Strømforbruk'] = df['Strømforbruk'].astype(float)
-
-
-        ############################################################
-        
         df = self.add_columns_to_df(df)
-    
         df['COP'] = df['Tilført effekt - Bane 1']/df['Strømforbruk']
         df['COP'].astype(float)
-
+        df["Tidsverdier"] = df['Tid'].dt.strftime("%d/%m-%y, %H:01").tolist()
+        df = df.mask(df == 0, None)
+        df['Tilført effekt - Bane 1'] = df['Tilført effekt - Bane 1'].round()
+        df['Strømforbruk'] = df['Strømforbruk'].round()
+        df['Strømforbruk_akkumulert'] = df['Strømforbruk'].cumsum()
+        self.total_poweruse = df['Strømforbruk_akkumulert'].max()
         df = self.date_picker(df = df) # top level filter
+            
         with st.sidebar:
-            df = self.resolution_picker(df = df)
+            #df = self.resolution_picker(df = df)
             self.select_mode()
         with st.container():
             self.default_kpi(df = df) # kpis
