@@ -449,7 +449,7 @@ class Dashboard:
         with tab1:
             st.caption("**Sammenstilling (energi per time, strømforbruk og utetemperatur)**")
             subplot(df=df, y_label = "Timesmidlet effekt (kWh/h)")
-            st.info("Vi har ikke fått strømdata på timesoppløsning - derav jevn fordeling per døgn.")
+            st.info("Vi har ikke fått strømdata med timesoppløsning - derav jevn fordeling per døgn.")
         with tab2:
             st.caption("**Sammenstilling (energi per dag, strømforbruk og utetemperatur)**")
             subplot(df=df_day, y_label = "Energi (kWh)", y_label_temperature = "Gj.snittlig temperatur (ºC)")
