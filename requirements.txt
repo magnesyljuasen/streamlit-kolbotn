@@ -20,6 +20,7 @@ contourpy==1.1.1
 cycler==0.11.0
 decorator==5.1.1
 dnspython==2.4.2
+et-xmlfile==1.1.0
 executing==1.2.0
 extra-streamlit-components==0.1.60
 Faker==19.6.2
@@ -59,6 +60,7 @@ matplotlib-inline==0.1.6
 mdurl==0.1.2
 more-itertools==10.1.0
 numpy==1.26.0
+openpyxl==3.1.2
 packaging==23.1
 pandas==2.1.1
 parso==0.8.3
@@ -95,8 +97,8 @@ smmap==5.0.1
 soupsieve==2.5
 st-annotated-text==4.0.1
 stack-data==0.6.2
-streamlit==1.27.0
-streamlit-authenticator==0.2.3
+streamlit==1.29.0
+streamlit-authenticator==0.3.1
 streamlit-camera-input-live==0.2.0
 streamlit-card==0.0.61
 streamlit-embedcode==0.1.2
@@ -126,4 +128,3 @@ whiteboxgui==2.3.0
 widgetsnbextension==4.0.9
 xyzservices==2023.7.0
 zipp==3.17.0
-openpyxl==3.1.2
