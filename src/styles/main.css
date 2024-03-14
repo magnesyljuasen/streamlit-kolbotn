@@ -9,9 +9,10 @@ section[tabindex="0"] {
 }
 */
 
+
 a {
     text-decoration: underline;
-    color: #1d3c34 !important;
+    color: #165EA4 !important;
     font-weight: 400;
 }
 
@@ -29,7 +30,7 @@ hr {
 
 div.stButton > button:first-child {
     color: white;
-    background-color: #1d3c34;
+    background-color: #165EA4;
     opacity: 1;
     border: none;
     transition-duration: 0.4s;

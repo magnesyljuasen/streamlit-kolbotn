@@ -2,14 +2,17 @@ credentials:
   usernames:
     kolbotn:
       name: Kolbotn IL
-      password: $2b$12$AueM1zINKakEgkist0ufK.Oks0c1YtqzEhXkrvZOXiH.qODXUaKM2 # To be replaced with hashed password
-    basum:
+      password: $2b$12$Yv09xnHmvzJqvf6kWZ0bnOMJ.jwXGM.B9rix14r.yYbJrUIpdB1ou # To be replaced with hashed password
+    baasum:
       name: Båsum Boring
-      password: $2b$12$QZ1rYv3nU4vd/H6Ti/kP/.TYo41vA4WjkcbbTSADJb8ChK.oma5Qa # To be replaced with hashed password
+      password: $2b$12$SxSdhRwkb2S/iSd18t6bSecDgQy/FfbAgclLX3Bqis0.eXj3vwwye # To be replaced with hashed password
     asplanviak:
       name: Asplan Viak
-      password: $2b$12$gqvYW7PEYOEMvYY5gQDbyOJEdqzUgNrNjIltb99EO50tF/qVa6HUi # To be replaced with hashed password
+      password: $2b$12$U5Vz7gDKb/VMKPpk5zyp3OKUPlAdEV9iZTqXSW0LkCjXbjauz6Sza # To be replaced with hashed password
+    eptec:
+      name: Eptec
+      password: $2b$12$N3hi1OAysyUyqY/lDS2FKOwsjROQSjyGMqBnOxyLJSDjlJ79TnlVW # To be replaced with hashed password
 cookie:
-  expiry_days: 60
+  expiry_days: 360
   key: some_signature_key
   name: some_cookie_name
