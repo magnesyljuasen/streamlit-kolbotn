@@ -14,6 +14,7 @@ import base64
 from PIL import Image
 import datetime
 import requests
+import json
 
 class Dashboard:
     def __init__(self):
@@ -62,6 +63,7 @@ class Dashboard:
         for document in cursor:
             data.append(document)
         df = pd.DataFrame(data)
+        df.to_csv(f'eksport_{substring}.csv')
         columns_to_exclude = ['_id']
         df = df.drop(columns=columns_to_exclude)
         df = df.drop_duplicates()
@@ -78,7 +80,7 @@ class Dashboard:
         elif substring == "TREND2":
             column_names = ["ID", "Date", "Time", "3501-RT503", "3201-RT401", "3201-RT501", "3501-RT401", "3501-RT504", "3501-RT001", "3501-RT002", "3501-RP001", "3501-RP002", "BC-RN001"]
         elif substring == "TREND3":
-            column_names = ["ID", "Date", "Time", "3201-OE501", "3202-OE501", "3203-OE501", "Utetemperatur"]
+            column_names = ["ID", "Date", "Time", "3201-OE501", "3202-OE501", "3203-OE501", "Utetemperatur", "SEKVENS"]
         df.columns = column_names
         return df
 
@@ -90,6 +92,9 @@ class Dashboard:
         client = pymongo.MongoClient("mongodb+srv://magnesyljuasen:jau0IMk5OKJWJ3Xl@cluster0.dlyj4y2.mongodb.net/")
         mydatabase = client["Kolbotn"]
         mycollection = mydatabase["Driftsdata"]
+        documents = list(mycollection.find())
+        with open('driftsdata.json', 'w') as file:
+            json.dump(documents, file, default=str)
         #--
         substring = "TREND1"
         df = self.database_to_df(mycollection = mycollection, substring = substring)
@@ -557,7 +562,7 @@ class Dashboard:
 #            self.energy_effect_plot(df = df, series = "Tilført effekt - Bane 2", series_label = "Timesmidlet effekt (kWh/h)", average = True, min_value = 0, max_value = 400)
 #        with c2:
 #            st.caption("**Effekt levert fra varmepumpe**")
-#            self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400, separator = False)
+        #self.energy_effect_plot(df = df, series = "Tilført effekt - Varmepumpe", series_label = "Timesmidlet effekt (kWh/h)", average = True, chart_type = "Bar", min_value = 0, max_value = 400, separator = False)
  
 #        st.markdown("---")
 #        st.caption("**Strømforbruk**")
@@ -625,6 +630,7 @@ class Dashboard:
             daily_sum = row['Strømforbruk']
             if daily_sum > 0:
                 hourly_sum = daily_sum/23
+            
             #if row['Til bane 1'] > -50:
             if row['Tilført energi - Bane 1'] > 0:
                 df.at[index, 'Strømforbruk'] = hourly_sum
