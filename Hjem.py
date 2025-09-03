@@ -56,37 +56,9 @@ class Dashboard:
                 authenticator.logout('Logg ut')
                 st.markdown("---")
 
-    def database_to_df(self, mycollection, substring):
-        query = {"Name": {"$regex": f".*{substring}.*"}}
-        cursor = mycollection.find(query)
-        data = []
-        for document in cursor:
-            data.append(document)
-        df = pd.DataFrame(data)
-        df.to_csv(f'eksport_{substring}.csv')
-        columns_to_exclude = ['_id']
-        df = df.drop(columns=columns_to_exclude)
-        df = df.drop_duplicates()
-        df = df.drop(columns="Name")
-        df.replace('', np.nan, inplace=True)
-        df.replace(' ', np.nan, inplace=True)
-        df = df.dropna(how='all')
-        df = df.dropna(axis = 1, thresh=1)
-        return df
-
-    def get_names(self, df, substring):
-        if substring == "TREND1":
-            column_names = ["ID", "Date", "Time", "3202-RT401", "3202-RT501", "3203-RT401", "3203-RT501", "3201-RT402", "3201-RT502", "3501-RT403", "3501-RT501", "3501-RT404", "3501-RT502"]
-        elif substring == "TREND2":
-            column_names = ["ID", "Date", "Time", "3501-RT503", "3201-RT401", "3201-RT501", "3501-RT401", "3501-RT504", "3501-RT001", "3501-RT002", "3501-RP001", "3501-RP002", "BC-RN001"]
-        elif substring == "TREND3":
-            column_names = ["ID", "Date", "Time", "3201-OE501", "3202-OE501", "3203-OE501", "Utetemperatur", "SEKVENS"]
-        df.columns = column_names
-        return df
-
     def convert_to_float(self, value):
         return float(str(value).replace(',', '.'))
-
+    
     def get_full_dataframe(self):
         #client = pymongo.MongoClient(**st.secrets["mongo"])
         client = pymongo.MongoClient("mongodb+srv://magnesyljuasen:jau0IMk5OKJWJ3Xl@cluster0.dlyj4y2.mongodb.net/")
@@ -677,8 +649,8 @@ class Dashboard:
         df['COP'] = df['Tilført effekt - Bane 1']/df['Strømforbruk']
         df['COP'].astype(float)
         df = df.mask(df == 0, None)
-        df['Tilført effekt - Bane 1'] = df['Tilført effekt - Bane 1'].round()
-
+        st.write(df)
+        
         df['Strømforbruk'] = df['Strømforbruk'].round()
         df['Strømforbruk_akkumulert'] = df['Strømforbruk'].cumsum()
         self.total_poweruse = df['Strømforbruk_akkumulert'].max()

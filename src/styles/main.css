@@ -1,41 +1,130 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
 
 
-* {font-family: 'Montserrat';}
 
-/*
-section[tabindex="0"] {
-  overflow-x: hidden;
+body, h1, h2, h3, h4, h5, h6, p, span, a, li, div, blockquote, pre, code {
+    font-family: 'Montserrat', sans-serif;
+    color: #1d3c34; /* Replace #333 with your desired text color */
 }
-*/
 
+h1 {
+    font-size: 2.5rem; /* Adjust to your desired size, e.g. 2rem, 1.8rem, etc. */
+}
+
+h2 {
+    font-size: 1.5rem; /* Adjust to your desired size */
+}
+
+h3 {
+    font-size: 1.2rem; /* Adjust to your desired size */
+}
+
+iframe[title="streamlit_folium.st_folium"] { height: 405px;}
+
+
+.title {
+    margin-top: 1em;
+    font-size: 4rem; 
+    font-family: 'Montserrat';
+    font-weight: 700;
+    line-height: 1em;
+    text-align: left;
+}
+
+.subtitle {
+    font-size: 2em; 
+    font-family: 'Montserrat';
+    font-weight: 500;
+    line-height: 1em;
+    text-align: left;
+}
+
+
+/* SELECTBOX */
+.stSelectbox{
+    text-align: center;
+    border: 0px solid #1d3c34 ;
+    border-radius: 10px;
+    box-shadow: -6px 8px 20px 1px #00000000;
+}
+
+.stSelectbox > div{
+    text-align: center;
+    font-size: 16px;
+}
+
+section.main > div {
+    max-width: 1600px;
+    }
 
 a {
-    text-decoration: underline;
-    color: #165EA4 !important;
+    text-decoration: None;
+    color: #48a23f !important;
     font-weight: 400;
 }
 
 a:hover {
-    color: #d33682 !important;
-    text-decoration: none;
+    color: #48a23f !important;
+    text-decoration: underline;
 }
 
-ul {list-style-type: circle;}
+ul {list-style-type: none;}
+
+
+ul.streamlit-expander {
+    background-color: transparent;
+    border-radius: 25px;
+    border: 0.05px solid #1d3c34;
+    padding: 5px;
+}
 
 hr {
-    margin-top: 0px;
+    margin-top: 2%;
     margin-bottom: 5%;
 }
 
+section[tabindex="0"] {
+    overflow-x: hidden;
+  }
+
+
+
+/*
+.stTextInput>div>div>input {
+    color: black;
+    background-color: whitesmoke;
+    border: #1d3c34;
+}
+*/
+
+div[data-testid="metric-container"] > label[data-testid="stMetricLabel"] > div {
+    overflow-wrap: break-word;
+    white-space: break-spaces;
+    color: red;
+    font-size: 100%;
+ }
+
+
+div.block-container {
+        padding-top: 2.5rem;
+        padding-bottom: 0rem;
+        padding-left: 2%;
+        padding-right: 2%;
+    }
+
+div.input > button:first-child { 
+    color: #1d3c34;
+    }
+
+/* CSS */
 div.stButton > button:first-child {
     color: white;
-    background-color: #165EA4;
+    background-color: #F6F8F1;
     opacity: 1;
     border: none;
     transition-duration: 0.4s;
     appearance: none;
-    border: 0px solid #1A1A1A;
+    border: 1px solid #1d3c34;
     border-radius: 15px;
     box-sizing: border-box;
     cursor: pointer;
@@ -58,26 +147,65 @@ div.stButton > button:first-child {
     width: 100%;
     will-change: transform;
   }
-
+  
   div.stButton > button:hover {
     color: white;
-    background-color: #b7dc8f;
+    background-color: #F0F4E3;
     box-shadow: rgba(0, 0, 0, 0.25) 0 8px 15px;
     transform: translateY(-2px);
   }
-
-  [data-testid="column"] {
-    /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
-    padding: 10px; /* Padding inside the card */
-    overflow: hidden;
-}
   
   div.stButton > button:active {
     box-shadow: none;
     transform: translateY(0);
   }
-
   
-#MainMenu {visibility: hidden;}
+  div.stProgress > div > div > div > div {
+    background-color: #1d3c34;
+    }
+
+/* Style containers */
+[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {
+    padding: 30px;
+    border-radius: 25px;
+    border: 1px groove #1d3c34;
+}
+
+MainMenu {visibility: hidden;}
+
 footer {visibility: hidden;}
+        
+footer:hover,  footer:active {
+    color: #ffffff;
+    background-color: transparent;
+    text-decoration: underline;
+    transition: 400ms ease 0s;
+}
+
+footer:after {
+    content:"En tjeneste levert av Asplan Viak"; 
+    visibility: visible;
+    display: block;
+    position: relative;
+    padding: 5px;
+    top: 2px;
+    color: black;
+}
+
+/* Hide scrollbar for all elements */
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    display: none;
+}
+
+/* Hide the scrollbar track */
+::-webkit-scrollbar-track {
+    background: transparent;
+    display: none;
+}
+
 header {visibility: hidden;}
+
+
+
