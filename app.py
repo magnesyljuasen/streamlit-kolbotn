@@ -73,7 +73,8 @@ def get_full_dataframe():
 
     ###############
     ### Bytt ut ###
-    client = pymongo.MongoClient("mongodb+srv://magnesyljuasen:jau0IMk5OKJWJ3Xl@cluster0.dlyj4y2.mongodb.net/")
+    #client = pymongo.MongoClient("mongodb+srv://magnesyljuasen:jau0IMk5OKJWJ3Xl@cluster0.dlyj4y2.mongodb.net/")
+    client = pymongo.MongoClient("mongodb://mongodb:27017/")
     mydatabase = client["Kolbotn"]
     mycollection = mydatabase["Driftsdata"]
     ### Bytt ut ###
