@@ -50,7 +50,7 @@ def get_full_dataframe():
         for document in cursor:
             data.append(document)
         df = pd.DataFrame(data)
-        df.to_csv(f'eksport_{substring}.csv')
+        #df.to_csv(f'eksport_{substring}.csv')
         columns_to_exclude = ['_id']
         df = df.drop(columns=columns_to_exclude)
         df = df.drop_duplicates()
@@ -71,13 +71,17 @@ def get_full_dataframe():
         df.columns = column_names
         return df
 
-    #client = pymongo.MongoClient(**st.secrets["mongo"])
+    ###############
+    ### Bytt ut ###
     client = pymongo.MongoClient("mongodb+srv://magnesyljuasen:jau0IMk5OKJWJ3Xl@cluster0.dlyj4y2.mongodb.net/")
     mydatabase = client["Kolbotn"]
     mycollection = mydatabase["Driftsdata"]
-    documents = list(mycollection.find())
-    with open('driftsdata.json', 'w') as file:
-        json.dump(documents, file, default=str)
+    ### Bytt ut ###
+    ###############
+
+    # documents = list(mycollection.find())
+    # with open('driftsdata.json', 'w') as file:
+    #     json.dump(documents, file, default=str)
     #--
     substring = "TREND1"
     df = database_to_df(mycollection = mycollection, substring = substring)
@@ -177,18 +181,6 @@ def get_temperature_series():
 
 @st.cache_resource(show_spinner=False)
 def calculate_more_columns(df, window_size=1):
-    def electric_column_to_hours(df):
-        for index, row in df.iterrows():
-            daily_sum = row['Strømforbruk']
-            if daily_sum > 0:
-                hourly_sum = daily_sum/23
-            #if row['Til bane 1'] > -50:
-            if row['Tilført energi - Bane 1'] > 0:
-                df.at[index, 'Strømforbruk'] = hourly_sum
-            else:
-                df.at[index, 'Strømforbruk'] = None
-        return df
-
     def remove_outliers(df, series):
         Q1 = df[series].quantile(0.1)
         Q3 = df[series].quantile(0.9)
@@ -206,8 +198,6 @@ def calculate_more_columns(df, window_size=1):
         merged_df.sort_values(by='Tid', inplace=True)
         merged_df.reset_index(drop=True, inplace=True)
         return merged_df
-
-    df = electric_column_to_hours(df=df)
 
     df['Tilført effekt - Bane 1'] = df["Tilført energi - Bane 1"].diff().rolling(window=window_size).mean()
     df['Tilført effekt - Bane 2'] = df["Tilført energi - Bane 2"].diff().rolling(window=window_size).mean()
@@ -249,6 +239,7 @@ def date_picker(df):
 
     # Predefined seasons
     predefined_seasons = {
+        "Fyringssesong 2025/2026": ("2025-09-15", "2026-05-12"),
         "Fyringssesong 2024/2025": ("2024-09-15", "2025-05-12"),
         "Fyringssesong 2023/2024": ("2023-08-01", "2024-04-02"),
         "Ladesesong 2025" : ("2025-05-12", "2025-09-15"),
@@ -256,9 +247,10 @@ def date_picker(df):
         "Egendefinert periode": None
     }
 
+    default_index = len(list(predefined_seasons.keys()))-1
     selection = st.radio(
         "Velg sesong eller egendefinert periode:",
-        list(predefined_seasons.keys())
+        list(predefined_seasons.keys()), index=default_index
     )
 
     helpstring = """Velg tidsintervall her for å filtere dataene. Alle tall og grafer vil oppdatere seg. Her er det mulig å se verdier for en måned ved å filtrere for f.eks. 1. desember til 31. desember."""
@@ -385,6 +377,22 @@ def temperature_plot_two_series(df, series_1, series_2, min_value = 0, max_value
         )
     st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False, 'staticPlot': False})
 
+@st.cache_resource(show_spinner=False)
+def show_forecast():
+    st.header('Fremtidsutsikter')
+    def embed_url_in_iframe(url):
+        html = f"""
+        <iframe src="{url}" style="width:100%; height:1400px; border:none;"></iframe>
+        """
+        st.components.v1.html(html, height=1400)
+    tab1, tab2 = st.tabs(['Værmelding', 'Webcam'])
+    with tab1:
+        url_pent = "https://pent.no/59.79672,10.81356"
+        embed_url_in_iframe(url=url_pent)
+    with tab2:
+        url_webcam = "https://xn--vindn-qra.no/webkamera/viken/nordre-follo/sofiemyr-e6-taraldrud-(retning-taraldrud)-d0025d"
+        embed_url_in_iframe(url=url_webcam)
+
 ### App start ###
 
 st.set_page_config(
@@ -423,20 +431,19 @@ with st.sidebar:
     for key, desc in sequence_dict.items():
         description_to_keys.setdefault(desc, []).append(key)
 
-    # Create radio options
-    options = ['Alle'] + list(description_to_keys.keys())
-    selected_description = st.radio('Velg sekvens', options=options)
+    with st.expander('Sekvens'):
+        # Create radio options
+        options = ['Alle'] + list(description_to_keys.keys())
+        selected_description = st.radio('Velg sekvens', options=options)
 
-    # Filtering logic
-    if selected_description == 'Alle':
-        df = df
-    else:
-        matching_keys = description_to_keys[selected_description]
-        df = df[df['SEKVENS'].astype(str).isin(matching_keys)]
+        # Filtering logic
+        if selected_description == 'Alle':
+            df = df
+        else:
+            matching_keys = description_to_keys[selected_description]
+            df = df[df['SEKVENS'].astype(str).isin(matching_keys)]
 
-    
-
-st.info(f'Viser nå data mellom {start_date} og {end_date}', icon=':material/info:')
+st.info(f'Viser nå data mellom {start_date} og {end_date}')
 
 with st.container(border=True):
     st.header('Utetemperatur og levert energi fra varmepumpe')
@@ -500,3 +507,6 @@ with st.container(border=True):
 with st.container(border=True):
     st.header('Nedlasting')
     st.dataframe(df, use_container_width=True, height=400)
+
+with st.container(border=True):
+    show_forecast()
