@@ -29,7 +29,7 @@ def streamlit_login_page(name, authentication_status, username, authenticator):
         st.error('Ugyldig brukernavn/passord')
         st.stop()
     elif authentication_status == None: # ingen input
-        st.image(Image.open('src/data/img/kolbotn_sesongvarmelager.jpg'), use_container_width=True)
+        st.image(Image.open('src/data/img/kolbotn_sesongvarmelager.jpg'), use_column_width=True)
         st.stop()
     elif authentication_status: # app start
         with st.sidebar:
